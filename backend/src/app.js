@@ -16,7 +16,19 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+}));
+
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 })); // keep the general one too
+// add near your other imports in app.js, or in a separate middleware/rateLimiters.js file
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5, // only 5 login attempts per 15 min per IP
+  message: { success: false, message: "Too many login attempts, please try again later", data: null },
+});
+app.use(loginLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 }));
@@ -33,6 +45,9 @@ app.use("/api/share", shareRoutes);
 
 app.use(errorHandler);
 
+const connectDB = require('./config/db');
+connectDB();
+
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
@@ -40,3 +55,6 @@ if (require.main === module) {
 }
 
 module.exports = app;
+
+
+
