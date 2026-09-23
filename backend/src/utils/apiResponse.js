@@ -5,3 +5,7 @@ const errorResponse = (res, message = "Error", statusCode = 500, errors = undefi
   res.status(statusCode).json({ success: false, message, ...(errors ? { errors } : {}) });
 
 module.exports = { successResponse, errorResponse };
+
+
+
+
