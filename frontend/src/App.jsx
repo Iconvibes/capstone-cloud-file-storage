@@ -1,11 +1,89 @@
-import { Link, Route, Routes } from "react-router-dom";
-import { useState } from "react";
+import { Route, Routes, Outlet, useLocation } from "react-router-dom";
 import "./styles.css";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import { LibraryProvider } from "./context/LibraryContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import BottomNav from "./components/BottomNav.jsx";
+import Sidebar from "./components/Sidebar.jsx";
+import UploadModal from "./components/UploadModal.jsx";
+import { NewFolderModal } from "./components/FolderPanel.jsx";
+import { Toasts } from "./components/ui.jsx";
+import Landing from "./pages/Landing.jsx";
+import About from "./pages/About.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import Home from "./pages/Home.jsx";
+import Files from "./pages/Files.jsx";
+import Starred from "./pages/Starred.jsx";
+import Shared from "./pages/Shared.jsx";
+import Trash from "./pages/Trash.jsx";
+import Profile from "./pages/Profile.jsx";
+import FilePreview from "./components/FilePreview.jsx";
+import SharedFile from "./pages/SharedFile.jsx";
+import NotFound from "./pages/NotFound.jsx";
+import { useLibrary } from "./context/LibraryContext.jsx";
 
-const items=[['capstone-research.pdf','PDF','2.4 MB','Capstone','Today'],['brand-assets.zip','ZIP','48.6 MB','Client work','Yesterday'],['moodboard.png','IMG','8.1 MB','Personal','18 Sep'],['proposal-notes.docx','DOC','940 KB','Client work','16 Sep']];
-const Mark=()=> <Link className="mark" to="/">LUMEN <i>VAULT</i></Link>;
-const Nav=()=> <header><Mark/><nav><Link to="/about">About</Link><Link to="/login">Sign in</Link><Link className="nav-cta" to="/register">Create a vault</Link></nav></header>;
-function Landing(){return <main className="landing"><Nav/><section className="hero"><div><p className="eyebrow">A calmer place for important things</p><h1>Your files,<br/><em>with a sense</em><br/>of place.</h1><p className="lede">Store coursework, client work and personal documents in a private, beautifully ordered vault.</p><div className="actions"><Link className="button" to="/register">Enter your vault <span>→</span></Link><Link to="/about">See how it works</Link></div></div><div className="hero-art"><div className="orb"/><div className="sun"/><article><small>RECENT ARRIVAL</small><strong>capstone<br/>research.pdf</strong><p>2.4 MB · secure link ready</p></article></div></section><section className="promise">One private account. Every important file.<span> Upload without clutter · Find things fast · Share on your terms</span></section></main>}
-function Auth({signup}){return <main className="auth"><section className="auth-copy"><Mark/><p className="eyebrow">YOUR PRIVATE WORKSPACE</p><h1>{signup?'Make room':'Welcome'}<br/><em>{signup?'for what matters.':'back.'}</em></h1><p>{signup?'A simple home for every file you want to keep close.':'Your files are right where you left them.'}</p></section><form className="auth-card"><p className="eyebrow">{signup?'CREATE YOUR VAULT':'SIGN IN'}</p><h2>{signup?'A few details, then you’re in.':'Continue to your archive.'}</h2>{signup&&<label>Name<input placeholder="Ada N."/></label>}<label>Email<input placeholder="ada@lumen.com"/></label><label>Password<input type="password" placeholder="••••••••"/></label><Link className="button" to="/dashboard">{signup?'Create my vault':'Sign in'} <span>→</span></Link><p>{signup?'Already have a vault? ':'New here? '}<Link to={signup?'/login':'/register'}>{signup?'Sign in':'Create one'}</Link></p></form></main>}
-function Dashboard(){const[q,setQ]=useState('');const[modal,setModal]=useState(false);const rows=items.filter(x=>x[0].includes(q.toLowerCase()));return <main className="workspace"><aside><Mark/><div><b>VAULT</b><p>All files</p><p>Recent</p><p>Shared with me</p><small>FOLDERS</small><p>◇ Capstone</p><p>◇ Client work</p><p>◇ Personal</p></div><footer><span>A</span> Ada N.<small>12.4 GB free</small></footer></aside><section className="vault"><div className="vault-head"><div><p className="eyebrow">TUESDAY, 22 SEPTEMBER</p><h1>Your <em>archive</em></h1></div><button className="button" onClick={()=>setModal(true)}>＋ Add a file</button></div><input aria-label="Search files" value={q} onChange={e=>setQ(e.target.value)} placeholder="⌕  Search your vault"/><div className="shelves"><small>QUICK SHELVES</small><b>42 <i>All files</i></b><b>12 <i>Images</i></b><b>24 <i>Documents</i></b><b>06 <i>Other</i></b></div><p className="eyebrow">RECENTLY TOUCHED</p>{rows.map(x=><article className="file" key={x[0]}><span className={x[1]}>{x[1]}</span><div><b>{x[0]}</b><p>{x[1]} · {x[2]} · {x[3]}</p></div><time>{x[4]}</time><button>•••</button></article>)}{modal&&<div className="modal"><section><button className="close" onClick={()=>setModal(false)}>×</button><p className="eyebrow">ADD TO YOUR VAULT</p><h2>Put something<br/><em>important away.</em></h2><div className="drop">⇧<b>Drop a file here</b><small>or choose one from your computer</small><button className="button">Choose file</button></div><p>PDF, documents, images or ZIP · max 10 MB</p></section></div>}</section></main>}
-function Info(){return <main className="info"><Nav/><section><p className="eyebrow">WHY LUMEN VAULT</p><h1>A private place for<br/><em>the work that follows you.</em></h1><p className="lede">Lumen Vault is for students, freelancers and small teams tired of files scattered across devices and lost in old messages.</p><div className="cards"><article><b>Upload</b><p>Add files and place them in a folder.</p></article><article><b>Find</b><p>Search by name or browse your shelves.</p></article><article><b>Share</b><p>Create a private link, then turn it off anytime.</p></article></div></section></main>};function Shared(){return <main className="shared"><Nav/><section><p className="eyebrow">SHARED BY ADA N.</p><span>PDF</span><h1>capstone<br/><em>research.pdf</em></h1><p>PDF · 2.4 MB · shared today</p><button className="button">↓ Download file</button></section></main>};export default function App(){return <Routes><Route path="/" element={<Landing/>}/><Route path="/about" element={<Info/>}/><Route path="/login" element={<Auth/>}/><Route path="/register" element={<Auth signup/>}/><Route path="/dashboard" element={<Dashboard/>}/><Route path="/share/:token" element={<Shared/>}/><Route path="*" element={<Landing/>}/></Routes>}
+// The signed-in workspace: sidebar on desktop, bottom nav on mobile, plus the
+// shared upload / new-folder actions and toast stack.
+function AppLayout() {
+  const { toasts, dismissToast, uploadOpen, setUploadOpen, newFolderOpen, setNewFolderOpen } = useLibrary();
+  const location = useLocation();
+  const hideChrome = location.pathname.startsWith("/app/preview");
+
+  return (
+    <div className="app-shell">
+      {!hideChrome ? <Sidebar onNewFolder={() => setNewFolderOpen(true)} /> : null}
+      <div className="app-main">
+        <Outlet />
+        {!hideChrome ? <BottomNav /> : null}
+      </div>
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <NewFolderModal open={newFolderOpen} onClose={() => setNewFolderOpen(false)} />
+      <Toasts items={toasts} onDismiss={dismissToast} />
+    </div>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/share/:token" element={<SharedFile />} />
+
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            <LibraryProvider>
+              <AppLayout />
+            </LibraryProvider>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Home />} />
+        <Route path="files" element={<Files />} />
+        <Route path="files/folder/:folderId" element={<Files />} />
+        <Route path="starred" element={<Starred />} />
+        <Route path="shared" element={<Shared />} />
+        <Route path="trash" element={<Trash />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="preview/:fileId" element={<FilePreview />} />
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}

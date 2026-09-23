@@ -1,9 +1,3 @@
 import { defineConfig } from "vite";
 
-export default defineConfig({
-  test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: "./src/testSetup.js",
-  },
-});
+export default defineConfig({});
