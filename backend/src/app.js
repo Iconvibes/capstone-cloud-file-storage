@@ -39,8 +39,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/files", fileRoutes);
-app.use("/api/folders", folderRoutes);
+app.use('/api/files', require('./routes/uploadRoutes'));app.use("/api/folders", folderRoutes);
 app.use("/api/share", shareRoutes);
 
 app.use(errorHandler);
