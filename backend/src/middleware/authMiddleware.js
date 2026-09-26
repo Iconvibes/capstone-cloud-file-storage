@@ -21,9 +21,9 @@ const authMiddleware = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (err) {
-    return errorResponse(res, "Not authorized, invalid or expired token", 401);
-  }
+ } catch (err) {
+  console.log("JWT verify error:", err.name, "-", err.message);
+  return errorResponse(res, "Not authorized, invalid or expired token", 401);
+}
 };
-
 module.exports = authMiddleware;
