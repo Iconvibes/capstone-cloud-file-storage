@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { Brand, Button } from "./ui.jsx";
+import { Menu, Moon, Sun, X } from "lucide-react";
+import { Brand, Button, IconButton } from "./ui.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 const LINKS = [
   { to: "/#features", label: "Features" },
@@ -13,6 +14,7 @@ const LINKS = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -26,7 +28,7 @@ export default function Navbar() {
   return (
     <header className={`site-head ${scrolled ? "is-scrolled" : ""}`.trim()}>
       <div className="site-head-in">
-        <Link to="/" className="site-brand" onClick={close} aria-label="Lumen Vault home">
+        <Link to="/" className="site-brand" onClick={close} aria-label="Nimbus home">
           <Brand />
         </Link>
         <nav className="site-links" aria-label="Primary">
@@ -44,15 +46,24 @@ export default function Navbar() {
             Get started
           </Link>
         </div>
-        <button
-          type="button"
-          className="menu-toggle"
-          aria-expanded={open}
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="site-tools">
+          <IconButton
+            label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="theme-toggle"
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </IconButton>
+          <button
+            type="button"
+            className="menu-toggle"
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
       {open ? (
         <div className="mobile-menu">

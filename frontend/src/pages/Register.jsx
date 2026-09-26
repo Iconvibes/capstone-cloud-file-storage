@@ -41,8 +41,7 @@ export default function Register() {
   return (
     <main className="auth-page">
       <div className="auth-panel">
-        <Link to="/" className="auth-back">
-          <ArrowLeft size={17} /> Back to Lumen Vault
+        <Link to="/" className="auth-back">            <ArrowLeft size={17} /> Back to Nimbus
         </Link>
         <div className="auth-card">
           <Brand />

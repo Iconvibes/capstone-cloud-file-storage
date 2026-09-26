@@ -59,7 +59,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="foot-base">
-        <span>© {new Date().getFullYear()} Lumen Vault, Inc.</span>
+        <span>© {new Date().getFullYear()} Nimbus, Inc.</span>
         <span>Made for people who care about their work.</span>
       </div>
     </footer>

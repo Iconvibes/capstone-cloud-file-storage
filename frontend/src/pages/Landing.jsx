@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import {
-  ArrowRight,
   Check,
   CloudUpload,
   Folder,
@@ -11,7 +10,6 @@ import {
   Search,
   Share2,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
@@ -30,38 +28,36 @@ function Reveal({ as: Tag = "div", className = "", children, ...rest }) {
 export default function Landing() {
   return (
     <div className="marketing">
+      <div className="aurora aurora-hero" aria-hidden="true" />
       <Navbar />
 
       {/* HERO */}
       <section className="hero">
         <div className="hero-in">
           <Reveal className="hero-copy">
-            <p className="eyebrow">
-              <Sparkles size={14} aria-hidden="true" /> Cloud storage that stays out of the way
-            </p>
             <h1>
               Everything you need,
               <br />
               right where you left it.
             </h1>
             <p className="hero-lede">
-              Lumen Vault keeps your documents, photos and projects in one calm place — organized,
+              Nimbus keeps your documents, photos and projects in one calm place — organized,
               easy to find, and ready on every device you use.
             </p>
             <div className="hero-actions">
               <Link to="/register" className="btn btn-dark btn-lg">
-                Create free account <ArrowRight size={17} />
+                Create free account
               </Link>
               <Link to="/login" className="btn btn-quiet btn-lg">
                 Sign in
               </Link>
             </div>
             <p className="hero-note">
-              <Check size={14} aria-hidden="true" /> Free for personal use <i /> <Check size={14} aria-hidden="true" /> No
-              card required
+              <Check size={14} aria-hidden="true" /> Free for personal use
+              <Check size={14} aria-hidden="true" /> No card required
             </p>
           </Reveal>
-          <Reveal className="hero-visual">
+          <div className="hero-visual hero-enter">
             <div className="hero-tilt">
               <AppMockup />
             </div>
@@ -82,30 +78,17 @@ export default function Landing() {
             <div className="hero-chip hero-chip-3">
               <Search size={16} />
               <span>
-                <b>12 results · 0.2s</b>
+                <b>12 results, 0.2s</b>
                 <small>“proposal”</small>
               </span>
             </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* TRUST STRIP */}
-      <section className="trust">
-        <p>TRUSTED FOR EVERYDAY WORK</p>
-        <div>
-          <span>Personal files</span>
-          <span>Client projects</span>
-          <span>Design assets</span>
-          <span>Research</span>
-          <span>Family photos</span>
+          </div>
         </div>
       </section>
 
       {/* FEATURES */}
       <section className="landing-sec" id="features">
         <Reveal className="sec-head">
-          <p className="kicker">Features</p>
           <h2>Simple tools that respect your attention</h2>
           <p className="sec-lede">
             The things you do with files every week — save them, find them, send them — without the clutter of an
@@ -170,7 +153,6 @@ export default function Landing() {
       <section className="landing-sec sec-alt" id="security">
         <div className="sec-split">
           <Reveal className="sec-head">
-            <p className="kicker">Security</p>
             <h2>Private by default, careful by design</h2>
             <p className="sec-lede">
               Your files are yours. Sharing is always an explicit action, account access is protected, and everything
@@ -218,7 +200,6 @@ export default function Landing() {
       {/* HOW IT WORKS */}
       <section className="landing-sec" id="how">
         <Reveal className="sec-head">
-          <p className="kicker">How it works</p>
           <h2>Three steps and you are organized</h2>
         </Reveal>
         <div className="how-grid">
@@ -257,7 +238,6 @@ export default function Landing() {
       {/* USE CASES */}
       <section className="landing-sec sec-alt">
         <Reveal className="sec-head">
-          <p className="kicker">Use cases</p>
           <h2>One home for every kind of work</h2>
         </Reveal>
         <div className="use-grid">
@@ -278,7 +258,6 @@ export default function Landing() {
       {/* PRODUCT PREVIEW */}
       <section className="landing-sec">
         <Reveal className="sec-head">
-          <p className="kicker">Product preview</p>
           <h2>Designed to feel light on every screen</h2>
           <p className="sec-lede">A quick look at the workspace you will actually open every day.</p>
         </Reveal>
@@ -289,11 +268,11 @@ export default function Landing() {
           <div className="preview-desk">
             <div className="preview-desk-bar">
               <span /> <span /> <span />
-              <em>lumenvault.app/app/files</em>
+              <em>app.nimbus.sky/files</em>
             </div>
             <div className="preview-desk-body">
               <div className="preview-desk-side">
-                <b>Lumen Vault</b>
+                <b>Nimbus</b>
                 {["Home", "My Files", "Shared", "Starred", "Trash"].map((item, i) => (
                   <span key={item} className={i === 1 ? "is-active" : ""}>
                     {item}
@@ -327,12 +306,13 @@ export default function Landing() {
 
       {/* FINAL CTA */}
       <section className="final-cta" id="cta">
+        <div className="aurora aurora-cta" aria-hidden="true" />
         <Reveal className="final-cta-in">
           <h2>Put your files somewhere calm</h2>
           <p>Set up takes about a minute. Your first 20 GB are free.</p>
           <div className="hero-actions center">
             <Link to="/register" className="btn btn-light btn-lg">
-              Get started free <ArrowRight size={17} />
+              Get started free
             </Link>
             <Link to="/login" className="btn btn-quiet-light btn-lg">
               I already have an account

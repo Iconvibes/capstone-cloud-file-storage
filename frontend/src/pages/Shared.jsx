@@ -56,7 +56,7 @@ export default function Shared() {
                   <span className="file-row-name">
                     <b>{item.name}</b>
                     <small>
-                      {formatBytes(item.size)} · {formatDate(item.at)}
+                      {formatBytes(item.size)} {formatDate(item.at)}
                     </small>
                   </span>
                 </button>
@@ -64,7 +64,7 @@ export default function Shared() {
                   <span className="shared-from">
                     <Avatar name={item.from} size="xs" />
                     <span>
-                      {item.from} · {item.permission === "edit" ? "Can edit" : "Can view"}
+                      {item.from} {item.permission === "edit" ? "Can edit" : "Can view"}
                     </span>
                   </span>
                   <span className="chip chip-shared" title="Shared with you">

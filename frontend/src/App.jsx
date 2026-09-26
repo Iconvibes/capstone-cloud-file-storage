@@ -1,6 +1,8 @@
 import { Route, Routes, Outlet, useLocation } from "react-router-dom";
+import { Upload } from "lucide-react";
 import "./styles.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { LibraryProvider } from "./context/LibraryContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import BottomNav from "./components/BottomNav.jsx";
@@ -38,6 +40,16 @@ function AppLayout() {
         <Outlet />
         {!hideChrome ? <BottomNav /> : null}
       </div>
+      {!hideChrome ? (
+        <button
+          type="button"
+          className="upload-fab"
+          aria-label="Upload files"
+          onClick={() => setUploadOpen(true)}
+        >
+          <Upload size={22} aria-hidden="true" />
+        </button>
+      ) : null}
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
       <NewFolderModal open={newFolderOpen} onClose={() => setNewFolderOpen(false)} />
       <Toasts items={toasts} onDismiss={dismissToast} />
@@ -82,8 +94,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

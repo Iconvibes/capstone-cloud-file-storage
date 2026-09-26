@@ -23,7 +23,7 @@ export default function FileActions({ file, onClose }) {
         <div>
           <b>{file.name}</b>
           <small>
-            {kindLabel(file.kind)} · {formatBytes(file.size)} · {formatDate(file.updatedAt)}
+            {kindLabel(file.kind)} {formatBytes(file.size)} {formatDate(file.updatedAt)}
           </small>
         </div>
       </div>

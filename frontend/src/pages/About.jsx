@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useReveal } from "../components/hooks.js";
@@ -19,7 +18,6 @@ export default function About() {
       <Navbar />
       <section className="about-hero">
         <Reveal>
-          <p className="kicker">About Lumen Vault</p>
           <h1>
             Storage should be
             <br />
@@ -29,7 +27,7 @@ export default function About() {
         <Reveal className="about-lede">
           <p>
             Files are the raw material of good work — contracts, photos, drafts, plans. They deserve a home that is
-            fast to search, calm to look at, and private without asking. That is the whole idea behind Lumen Vault.
+            fast to search, calm to look at, and private without asking. That is the whole idea behind Nimbus.
           </p>
         </Reveal>
       </section>
@@ -72,7 +70,7 @@ export default function About() {
           <h2>Make your files feel at home</h2>
           <p>Free for personal use. Upgrade when your library grows.</p>
           <Link className="btn btn-light btn-lg" to="/register">
-            Create free account <ArrowRight size={17} />
+            Create free account
           </Link>
         </Reveal>
       </section>

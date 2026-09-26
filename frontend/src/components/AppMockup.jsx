@@ -4,10 +4,10 @@ import { Clock, Folder, Search, Share2, Star, Upload, Wifi, BatteryFull, Signal 
 // Pure CSS/DOM so it stays crisp at any size.
 export default function AppMockup({ compact = false }) {
   const files = [
-    { name: "Project Proposal.pdf", meta: "PDF · 2.4 MB", tone: "red" },
-    { name: "Team Offsite.png", meta: "PNG · 3.2 MB", tone: "violet", thumb: "https://picsum.photos/seed/lv-offsite/96/96" },
-    { name: "Financial Report.xlsx", meta: "XLS · 1.5 MB", tone: "green" },
-    { name: "Product Demo.mp4", meta: "MP4 · 65 MB", tone: "rose" },
+    { name: "Project Proposal.pdf", meta: "PDF 2.4 MB", tone: "red" },
+    { name: "Team Offsite.png", meta: "PNG 3.2 MB", tone: "violet", thumb: "https://picsum.photos/seed/lv-offsite/96/96" },
+    { name: "Financial Report.xlsx", meta: "XLS 1.5 MB", tone: "green" },
+    { name: "Product Demo.mp4", meta: "MP4 65 MB", tone: "rose" },
   ];
 
   return (

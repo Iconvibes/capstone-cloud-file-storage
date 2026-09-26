@@ -37,8 +37,7 @@ export default function Login() {
   return (
     <main className="auth-page">
       <div className="auth-panel">
-        <Link to="/" className="auth-back">
-          <ArrowLeft size={17} /> Back to Lumen Vault
+        <Link to="/" className="auth-back">            <ArrowLeft size={17} /> Back to Nimbus
         </Link>
         <div className="auth-card">
           <Brand />
@@ -72,7 +71,7 @@ export default function Login() {
             </Button>
           </form>
           <p className="auth-switch">
-            New to Lumen Vault? <Link to="/register">Create an account</Link>
+            New to Nimbus? <Link to="/register">Create an account</Link>
           </p>
         </div>
         <p className="auth-legal">

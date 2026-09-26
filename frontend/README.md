@@ -1,6 +1,6 @@
-# Lumen Vault — Frontend
+# Nimbus — Frontend
 
-Lumen Vault is a cloud file storage product: a calm place to store, organize, preview, and share files from any device. This repository contains the complete frontend — a mobile-first React application with a polished desktop experience, wrapped in a marketing site.
+Nimbus is a cloud file storage product: a calm place to store, organize, preview, and share files from any device. This repository contains the complete frontend — a mobile-first React application with a polished desktop experience, wrapped in a marketing site.
 
 The frontend runs entirely on **demo data**. There is no live backend behind it yet; every screen is built so the real API can replace the mock layer without touching UI code (see [Swapping in the real API](#6-the-services-layer--swapping-in-the-real-api)).
 
@@ -285,6 +285,6 @@ Type scale: page titles use `clamp(23px → 30px)`, hero display `clamp(34px →
 - **New component?** Primitives (no domain knowledge) go in `ui.jsx`; everything else gets its own file in `components/`.
 - **Styling:** add to `styles.css` under the matching section comment. Keep specificity flat — class selectors, no nesting wars.
 - **Dependencies:** the stack is deliberately small. Adding a library needs a reason lucide/Vite/React can't already cover.
-- **Demo honesty:** placeholder data must be labeled as demo (see the storage card). Nothing in the UI may reference the project's development history — no "capstone," school, or assignment wording anywhere, ever.
+- **Demo honesty:** placeholder data must be labeled as demo (see the storage card). The UI speaks in product voice only, always.
 - **Exports:** `ui.jsx` and `hooks.js` are barrel-style; import from the module root (`components/ui.jsx`), not deep paths.
 - **Known simplifications:** auth is mock-only; the trash "restore" puts files back at the library root; folder starring is display-only. All are deliberate scope cuts, not bugs.

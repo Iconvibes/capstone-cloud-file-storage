@@ -1,41 +1,47 @@
 /* ============================================================
-   Lumen Vault — design system
-   Clean white surfaces, one cobalt accent, soft shadows,
-   large radii, mobile-first. Plain CSS, no framework.
+   Nimbus — design system
+   Sky-light surfaces, Drift blue with a Sunrise coral accent
+   and an Aurora violet glow. Glass where cloud belongs.
+   Mobile-first. Plain CSS, no framework.
    ============================================================ */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap");
 
 :root {
-  /* color */
-  --bg: #f6f7f9;
+  /* color — Nimbus sky palette */
+  --bg: #fafbff;
   --surface: #ffffff;
-  --surface-2: #f0f2f5;
+  --surface-2: #eef0fb;
   --ink: #101828;
   --ink-2: #475467;
   --ink-3: #98a2b3;
-  --line: #eaecf0;
-  --line-strong: #d0d5dd;
-  --brand: #3b5bfd;
-  --brand-deep: #2f49d1;
-  --brand-soft: #eef1ff;
-  --success: #12b76a;
+  --line: #e6e9f5;
+  --line-strong: #d0d5e8;
+  --brand: #4c5ef5;
+  --brand-deep: #3a46c9;
+  --brand-soft: #eef0fb;
+  --sunrise: #ff7a59;
+  --sunrise-deep: #e85f3d;
+  --sunrise-soft: #fff0ea;
+  --aurora: #7c5cfc;
+  --success: #22c58b;
   --warning: #f79009;
   --danger: #f04438;
   --danger-soft: #fee4e2;
   --dark: #101828;
 
-  /* elevation */
-  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
-  --shadow-md: 0 10px 28px -8px rgba(16, 24, 40, 0.16), 0 3px 8px -4px rgba(16, 24, 40, 0.06);
-  --shadow-lg: 0 24px 60px -18px rgba(16, 24, 40, 0.28), 0 8px 20px -10px rgba(16, 24, 40, 0.1);
+  /* elevation — tinted with Drift / Sunrise, never plain grey */
+  --shadow-xs: 0 1px 2px rgba(58, 70, 201, 0.06);
+  --shadow-sm: 0 2px 6px rgba(58, 70, 201, 0.09), 0 1px 2px rgba(58, 70, 201, 0.05);
+  --shadow-md: 0 12px 30px -10px rgba(58, 70, 201, 0.22), 0 3px 8px -4px rgba(58, 70, 201, 0.08);
+  --shadow-lg: 0 26px 64px -20px rgba(58, 70, 201, 0.34), 0 10px 24px -12px rgba(255, 122, 89, 0.14);
+  --shadow-float: 0 14px 34px -10px rgba(76, 94, 245, 0.42), 0 4px 12px -6px rgba(255, 122, 89, 0.28);
 
   /* shape & rhythm */
   --r-sm: 10px;
   --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 26px;
+  --r-lg: 22px;
+  --r-xl: 28px;
   --pad: 20px;
   --bottomnav-h: 62px;
   --sat: env(safe-area-inset-top, 0px);
@@ -43,7 +49,7 @@
 
   /* type */
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Sora", "Inter", system-ui, sans-serif;
 }
 
 * {
@@ -157,15 +163,7 @@ h3,
   font-family: var(--font-display);
   letter-spacing: -0.022em;
   line-height: 1.14;
-  font-weight: 800;
-}
-
-.kicker {
-  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--brand);
 }
 
 /* ---------- buttons ---------- */
@@ -1020,9 +1018,60 @@ h3,
    MARKETING SITE
    ============================================================ */
 
+body {
+  overflow-x: clip;
+}
+
+/* ambient aurora — one large soft glow per moment, drifting slowly.
+   This is atmosphere, the one continuous motion we allow ourselves. */
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(closest-side, rgba(124, 92, 252, 0.5), transparent 72%),
+    radial-gradient(closest-side, rgba(76, 94, 245, 0.4), transparent 78%);
+  animation: aurora-drift 22s ease-in-out infinite alternate;
+}
+
+.aurora-hero {
+  top: -340px;
+  left: 50%;
+  width: 900px;
+  height: 640px;
+  margin-left: -450px;
+  opacity: 0.5;
+}
+
+.aurora-cta {
+  top: 50%;
+  left: 50%;
+  width: 720px;
+  height: 560px;
+  margin: -280px 0 0 -360px;
+  opacity: 0.4;
+}
+
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.08);
+  }
+}
+
 .marketing {
+  position: relative;
   background: var(--surface);
   min-height: 100vh;
+}
+
+.marketing > section {
+  position: relative;
+  z-index: 1;
 }
 
 .site-head {
@@ -1131,6 +1180,10 @@ h3,
   padding: 30px 0 0;
 }
 
+.hero > .aurora-hero {
+  z-index: 0;
+}
+
 .hero-in {
   display: grid;
   gap: 40px;
@@ -1139,8 +1192,7 @@ h3,
   padding: 24px clamp(18px, 4vw, 44px) 30px;
 }
 
-@media (min-width: 960px) {
-  .hero-in {
+@media (min-width: 960px) {  .hero-in {
     grid-template-columns: 1.05fr 1fr;
     gap: 40px;
     align-items: center;
@@ -1151,19 +1203,6 @@ h3,
 
 .hero-copy {
   max-width: 600px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--brand-deep);
-  background: var(--brand-soft);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 13px;
-  border-radius: 999px;
-  margin-bottom: 20px;
 }
 
 .hero h1 {
@@ -1197,14 +1236,6 @@ h3,
   font-weight: 550;
 }
 
-.hero-note i {
-  width: 3.5px;
-  height: 3.5px;
-  border-radius: 50%;
-  background: var(--line-strong);
-  margin: 0 3px;
-}
-
 .hero-actions.center {
   justify-content: center;
 }
@@ -1218,8 +1249,24 @@ h3,
   padding: 12px 0 34px;
 }
 
+.hero-visual {
+  position: relative;
+}
+
+.hero-enter {
+  animation: hero-in 0.9s cubic-bezier(0.22, 1.2, 0.32, 1) 0.12s both;
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+}
+
 .hero-tilt {
   perspective: 1200px;
+  will-change: transform;
 }
 
 .hero-tilt .phone {
@@ -1565,8 +1612,7 @@ h3,
 }
 
 .trust p {
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 11.5px;
   color: var(--ink-3);
   font-weight: 650;
 }
@@ -1985,7 +2031,6 @@ h3,
 
 .preview-desk-storage span:first-child {
   font-size: 10.5px;
-  letter-spacing: 0.06em;
   color: var(--ink-3);
   font-weight: 650;
 }
@@ -2028,7 +2073,9 @@ h3,
 
 /* final cta */
 .final-cta {
-  background: var(--dark);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #101828 0%, #1b2450 58%, #34276b 100%);
   color: #fff;
 }
 
@@ -2095,13 +2142,11 @@ h3,
 }
 
 .foot-col h3 {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--ink-2);
   margin-bottom: 4px;
-  font-family: var(--font-body);
+  font-family: var(--font-display);
 }
 
 .foot-col a {
@@ -2491,10 +2536,8 @@ h3,
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 8px;
 }
@@ -3660,10 +3703,8 @@ h3,
 }
 
 .up-live-title {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--ink-3);
 }
 
@@ -3709,7 +3750,7 @@ h3,
   display: block;
   height: 100%;
   border-radius: 99px;
-  background: var(--brand);
+  background: linear-gradient(90deg, var(--brand), var(--sunrise));
   transition: width 0.15s ease;
 }
 
@@ -4089,12 +4130,10 @@ h3,
 }
 
 .settings-group h2 {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  font-size: 14px;
+  color: var(--ink-2);
   margin-bottom: 9px;
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   font-weight: 700;
 }
 
@@ -4284,5 +4323,283 @@ a.settings-row:hover {
   margin-top: 12px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* ============================================================
+   Nimbus atmosphere — glass surfaces, spring physics, tilt depth
+   ============================================================ */
+
+/* glass: navbar, sheets/modals, cards on hover — glass reads as cloud */
+.site-head {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.35);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+}
+
+.sheet,
+.menu-pop {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+}
+
+.feat,
+.use-card,
+.sec-card {
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1.28, 0.32, 1),
+    box-shadow 0.45s ease;
+}
+
+.feat:hover,
+.use-card:hover,
+.sec-card:hover {
+  transform: translateY(-5px);
+
+  /* extra glass on hover; backdrop-filter only blurs what is behind */
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* buttons and modals get weight — a slight overshoot that settles */
+@keyframes spring-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+  }
+  78% {
+    transform: translateY(-3px) scale(1.012);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sheet {
+  animation: spring-in 0.42s cubic-bezier(0.22, 1.28, 0.32, 1) both;
+}
+
+/* 3D tilt with a moving highlight on pointer-capable screens */
+.tilt {
+  transform-style: preserve-3d;
+  will-change: transform;
+  position: relative;
+}
+
+.tilt-highlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    340px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.32),
+    transparent 62%
+  );
+}
+
+.tilt:hover .tilt-highlight {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .file-card {
+    transition:
+      transform 0.4s cubic-bezier(0.22, 1.28, 0.32, 1),
+      box-shadow 0.4s ease;
+  }
+
+  .file-card:hover {
+    transform: translateY(-3px) rotateX(2.5deg) rotateY(-2.5deg);
+    box-shadow: var(--shadow-md);
+  }
+
+  .file-row {
+    transition: background 0.2s ease, transform 0.35s cubic-bezier(0.22, 1.28, 0.32, 1);
+  }
+
+  .file-row:hover {
+    transform: translateX(2px);
+  }
+}
+
+/* upload FAB — the one bold moment on dashboard screens */
+.upload-fab {
+  position: fixed;
+  right: 18px;
+  bottom: calc(76px + var(--sab));
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--aurora) 100%);
+  color: #fff;
+  box-shadow: var(--shadow-float);
+  transition: transform 0.35s cubic-bezier(0.22, 1.28, 0.32, 1), box-shadow 0.35s ease;
+}
+
+.upload-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.upload-fab:active {
+  transform: scale(0.94);
+}
+
+@media (min-width: 960px) {
+  .upload-fab {
+    right: 34px;
+    bottom: 34px;
+    width: 58px;
+    height: 58px;
+  }
+}
+
+.theme-toggle {
+  color: var(--ink-2);
+}
+
+.site-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (min-width: 960px) {
+  .site-tools .menu-toggle {
+    display: none;
+  }
+}
+
+/* aurora glow behind dashboard empty states — atmosphere, not noise */
+.empty-state {
+  position: relative;
+  overflow: hidden;
+}
+
+.empty-state::before {
+  content: "";
+  position: absolute;
+  top: -110px;
+  left: 50%;
+  width: 360px;
+  height: 280px;
+  margin-left: -180px;
+  border-radius: 50%;
+  filter: blur(64px);
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side, rgba(124, 92, 252, 0.34), transparent 72%),
+    radial-gradient(closest-side, rgba(76, 94, 245, 0.26), transparent 78%);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+.empty-state > * {
+  position: relative;
+}
+
+/* ------- dark mode ------- */
+
+html[data-theme="dark"] {
+  --bg: #0e1424;
+  --surface: #151c30;
+  --surface-2: #1d2540;
+  --ink: #f2f4ff;
+  --ink-2: #b9c1dd;
+  --ink-3: #7e88ad;
+  --line: #263050;
+  --line-strong: #35406a;
+  --brand-soft: rgba(76, 94, 245, 0.18);
+  --sunrise-soft: rgba(255, 122, 89, 0.14);
+  --shadow-xs: 0 1px 2px rgba(4, 8, 20, 0.4);
+  --shadow-sm: 0 2px 6px rgba(4, 8, 20, 0.45);
+  --shadow-md: 0 12px 30px -10px rgba(4, 8, 20, 0.6);
+  --shadow-lg: 0 26px 64px -20px rgba(4, 8, 20, 0.7);
+  --shadow-float: 0 14px 34px -10px rgba(76, 94, 245, 0.5), 0 4px 12px -6px rgba(255, 122, 89, 0.3);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .brand-mark {
+  background: var(--brand);
+}
+
+/* in dark mode the "dark" button flips to a light surface so it stays loud */
+html[data-theme="dark"] .btn-dark,
+html[data-theme="dark"] .btn-primary {
+  background: #f2f4ff;
+  color: #101828;
+}
+
+html[data-theme="dark"] .btn-dark:hover,
+html[data-theme="dark"] .btn-primary:hover {
+  background: #ffffff;
+}
+
+html[data-theme="dark"] .btn-light {
+  background: #f2f4ff;
+  color: #101828;
+}
+
+html[data-theme="dark"] .btn-soft:hover {
+  background: #263050;
+}
+
+html[data-theme="dark"] .hero-tilt .phone {
+  box-shadow: var(--shadow-lg), inset 0 0 0 2px #2a3648;
+}
+
+html[data-theme="dark"] .phone {
+  background: #0b1120;
+  box-shadow: var(--shadow-lg), inset 0 0 0 2px #232e4d;
+}
+
+html[data-theme="dark"] .bottom-nav,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .site-head {
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+}
+
+html[data-theme="dark"] .aurora {
+  opacity: 0.75;
+  filter: blur(100px);
+}
+
+/* freeze atmosphere + simplify motion when the user prefers calm */
+@media (prefers-reduced-motion: reduce) {
+  .aurora {
+    animation: none;
+  }
+
+  .hero-enter {
+    animation: none;
+    opacity: 1;
+  }
+
+  .sheet {
+    animation: fade-in 0.18s ease both;
+  }
+
+  .tilt-highlight,
+  .tilt:hover .tilt-highlight {
+    opacity: 0;
+  }
+
+  .file-card:hover,
+  .file-row:hover,
+  .feat:hover,
+  .use-card:hover,
+  .sec-card:hover {
+    transform: none;
+  }
 }
 

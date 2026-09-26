@@ -25,8 +25,8 @@ export function FileListItem({ file, onOpen, onToggleStar, selected, onSelect, s
         <span className="file-row-name">
           <b>{file.name}</b>
           <small>
-            {formatBytes(file.size)} · {formatDate(file.updatedAt)}
-            {folderName ? ` · ${folderName}` : ""}
+            {formatBytes(file.size)} {formatDate(file.updatedAt)}
+            {folderName ? ` in ${folderName}` : ""}
           </small>
         </span>
       </button>

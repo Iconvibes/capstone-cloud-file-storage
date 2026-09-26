@@ -20,7 +20,7 @@ export default function Sidebar({ onNewFolder, onUpload }) {
   return (
     <aside className="sidebar">
       <div className="side-top">
-        <Link to="/app" className="side-brand" aria-label="Lumen Vault home">
+        <Link to="/app" className="side-brand" aria-label="Nimbus home">
           <Brand />
         </Link>
         <nav className="side-nav" aria-label="Library">

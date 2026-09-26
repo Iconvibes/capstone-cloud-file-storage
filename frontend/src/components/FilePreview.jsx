@@ -56,8 +56,8 @@ export default function FilePreview() {
         <div className="preview-title">
           <b>{file.name}</b>
           <small>
-            {kindLabel(file.kind)} · {formatBytes(file.size)} · Modified {formatDateOnly(file.updatedAt)}
-            {folder ? ` · ${folder.name}` : ""}
+            {kindLabel(file.kind)} {formatBytes(file.size)} Modified {formatDateOnly(file.updatedAt)}
+            {folder ? ` in ${folder.name}` : ""}
           </small>
         </div>
         <div className="preview-actions">

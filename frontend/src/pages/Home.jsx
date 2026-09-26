@@ -109,7 +109,7 @@ export default function Home() {
                   <FileIcon kind={file.kind} name={file.name} thumb={file.thumb} />
                   <b>{file.name}</b>
                   <small>
-                    {formatBytes(file.size)} · {formatDate(file.updatedAt)}
+                    {formatBytes(file.size)} {formatDate(file.updatedAt)}
                   </small>
                 </button>
               ))}

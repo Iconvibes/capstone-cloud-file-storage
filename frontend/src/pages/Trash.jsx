@@ -64,7 +64,7 @@ export default function Trash() {
                   <span className="file-row-name">
                     <b>{item.name}</b>
                     <small>
-                      {formatBytes(item.size)} · Deleted {formatDate(item.deletedAt)} · from {item.restoreTo}
+                      {formatBytes(item.size)} Deleted {formatDate(item.deletedAt)} from {item.restoreTo}
                     </small>
                   </span>
                 </div>

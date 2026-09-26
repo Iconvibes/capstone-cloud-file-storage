@@ -34,7 +34,7 @@ export default function SharedFile() {
       <header className="share-head">
         <Brand />
         <Link to="/" className="share-home">
-          <ArrowLeft size={15} /> lumenvault.app
+          <ArrowLeft size={15} /> nimbus.sky
         </Link>
       </header>
 
@@ -56,7 +56,7 @@ export default function SharedFile() {
             need access.
           </p>
           <Link className="btn btn-dark" to="/">
-            Go to Lumen Vault
+            Go to Nimbus
           </Link>
         </div>
       ) : (
@@ -64,7 +64,7 @@ export default function SharedFile() {
           <FileIcon kind={share.kind} name={share.name} size="lg" />
           <h1>{share.name}</h1>
           <p className="share-meta">
-            {kindLabel(share.kind)} · {formatBytes(share.size)} · Shared by {share.owner} on{" "}
+            {kindLabel(share.kind)} {formatBytes(share.size)} Shared by {share.owner} on{" "}
             {formatDateOnly(share.createdAt)}
           </p>
           <div className="share-actions">
@@ -73,7 +73,7 @@ export default function SharedFile() {
             </Button>
           </div>
           <p className="share-trust">
-            <ShieldCheck size={14} aria-hidden="true" /> Shared via Lumen Vault — the owner can revoke this link at any
+            <ShieldCheck size={14} aria-hidden="true" /> Shared via Nimbus — the owner can revoke this link at any
             time.
           </p>
         </div>

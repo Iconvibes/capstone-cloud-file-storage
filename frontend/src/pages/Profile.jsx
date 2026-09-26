@@ -84,7 +84,7 @@ export default function Profile() {
                 <CircleHelp size={17} />
               </span>
               <span className="settings-meta">
-                <b>About Lumen Vault</b>
+                <b>About Nimbus</b>
                 <small>What the product is built on</small>
               </span>
               <ChevronRight size={17} aria-hidden="true" />

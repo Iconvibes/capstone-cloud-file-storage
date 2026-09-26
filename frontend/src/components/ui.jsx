@@ -163,12 +163,13 @@ export function Brand({ dark = false }) {
     <span className={`brand ${dark ? "brand-dark" : ""}`.trim()}>
       <span className="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 32 32" width="17" height="17" fill="none" aria-hidden="true">
-          <path d="M8 24.5 15.9 7l8 17.5h-4.6l-3.4-8-3.3 8Z" fill="currentColor" />
+          <path
+            d="M10.4 22.5a4.9 4.9 0 0 1-.5-9.78 7 7 0 0 1 13.55 1.16 4.31 4.31 0 0 1-.7 8.62Z"
+            fill="currentColor"
+          />
         </svg>
       </span>
-      <span className="brand-word">
-        Lumen<em>Vault</em>
-      </span>
+      <span className="brand-word">Nimbus</span>
     </span>
   );
 }

@@ -1,11 +1,11 @@
-// Demo library data for the Lumen Vault product UI.
+// Demo library data for the Nimbus product UI.
 // Shapes mirror a future REST payload so screens can switch to the real API
 // without changing presentation code. Sizes are in bytes unless noted.
 
 export const demoUser = {
   id: "u1",
   name: "Ada Nakamura",
-  email: "ada@lumenvault.app",
+  email: "ada@nimbus.app",
   initials: "AN",
   plan: "Plus",
   twoFactor: false,
@@ -18,11 +18,10 @@ export const demoStorage = {
   usedGb: 38.4,
   usedLabel: "38.4 GB",
   breakdown: [
-    { key: "photos", label: "Photos", gb: 14.2, color: "#3B5BFD" },
-    { key: "documents", label: "Documents", gb: 9.6, color: "#1F3AC2" },
-    { key: "videos", label: "Video", gb: 8.9, color: "#7B8CDE" },
-    { key: "other", label: "Other", gb: 5.7, color: "#C9D2E3" },
-  ],
+    { key: "photos", label: "Photos", gb: 14.2, color: "#4C5EF5" },
+    { key: "documents", label: "Documents", gb: 9.6, color: "#3A46C9" },
+    { key: "videos", label: "Video", gb: 8.9, color: "#7C5CFC" },
+    { key: "other", label: "Other", gb: 5.7, color: "#FF7A59" },  ],
 };
 
 // Folder records. `parentId` nests a folder inside another folder.

@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, LogOut, Search, Settings, UserRound } from "lucide-react";
+import { Bell, LogOut, Moon, Search, Settings, Sun, UserRound } from "lucide-react";
 import { Avatar, IconButton } from "./ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 export default function TopBar({ title, right, onSearch }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="topbar">
@@ -21,6 +23,12 @@ export default function TopBar({ title, right, onSearch }) {
       </div>
       <div className="topbar-side">
         {right}
+        <IconButton
+          label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
+        </IconButton>
         <IconButton label="Notifications" className="hide-sm">
           <Bell size={19} />
           <span className="dot-badge" aria-hidden="true" />

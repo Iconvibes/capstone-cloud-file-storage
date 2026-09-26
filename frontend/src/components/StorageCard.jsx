@@ -38,12 +38,12 @@ export default function StorageCard({ compact = false }) {
         {storage.breakdown.map((seg) => (
           <span key={seg.key}>
             <i style={{ background: seg.color }} aria-hidden="true" />
-            {seg.label} · {seg.gb} GB
+            {seg.label} {seg.gb} GB
           </span>
         ))}
       </div>
       <p className="storage-note">
-        {remaining.toFixed(1)} GB available · demo data, not your real usage
+        {remaining.toFixed(1)} GB available, shown with demo data
       </p>
     </section>
   );

@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { demoUser } from "../services/mockData";
 
 const AuthContext = createContext(null);
-const STORAGE_KEY = "lumen-vault-user";
+const STORAGE_KEY = "nimbus-user";
 
 function readStoredUser() {
   try {
