@@ -1,244 +1,157 @@
-# Integration notes — B3 (file retrieval)
+# Notes from B3 about what is broken (easy-read version)
 
-Hi team — these are the issues I hit while integrating and testing my part
-(`GET /api/files`, `GET /api/files/:id`, `GET /api/files/:id/download`) against
-everyone's merged code on `feature/file-retrieval-b3`.
+Hi team 👋
 
-**Testing context, so the results are reproducible:** with the current merged
-code the backend cannot run as-is (issues 1 and 2 below). To verify my own
-endpoints I mounted my real `routes/fileRoutes.js` together with the real
-`middleware/authMiddleware.js`, `middleware/validate.js`,
-`controllers/manageController.js` and `routes/folderRoutes.js` in a test app,
-and ran a 39-case suite (list/search/filter/sort/pagination, details, download,
-auth, ID validation, cross-user access, invalid params). All 39 cases pass
-against my files. Issues 1–4 are what blocks the real app.
+I finished building and testing my part (viewing, searching, and downloading
+files). My part works — I tested it 39 different ways and everything passed.
+
+But when I put my code together with everyone else's, I found some problems in
+other parts of the app. Because of these problems, **the app cannot run at all
+right now**. This file explains each problem in simple words, who needs to fix
+it, and how.
 
 ---
 
-## 1. `fileRoutes.js` does not exist as a route in the running app — `app.js` mounts `uploadRoutes` at `/api/files` and never mounts `fileRoutes`
+## Problem 1: My file pages are not connected to the app (fix by B1)
 
-- **File:** `backend/src/app.js`
-- **Owner:** B1 (auth/foundation)
-- **Severity:** blocker for my whole feature
+**Where:** `backend/src/app.js`
+**Who:** B1
 
-**What is wrong**
+**The problem, in plain words:**
+Think of `app.js` like a receptionist that sends visitors to the right desk.
+The receptionist sends anyone asking for "files" to the **upload desk** instead
+of **my desk**. And my desk (`fileRoutes.js`) was never plugged in at all.
 
-Two problems on consecutive lines:
+So when someone opens their file list, the app says "page not found" — even
+though my code is sitting right there, finished and working.
+
+**How to see it yourself:**
+1. Start the app.
+2. Make a user account and copy the token it gives you.
+3. Open the files list address (`/api/files`) with that token.
+4. You get an ugly "Cannot GET" page instead of the file list.
+
+**The fix (one line):**
+In `app.js`, change the line that connects "files" to the upload code so it
+connects to my file code instead:
 
 ```js
-app.use('/api/files', require('./routes/uploadRoutes'));app.use("/api/folders", folderRoutes);
+app.use("/api/files", fileRoutes);
 ```
 
-- `/api/files` is wired to `uploadRoutes` (which only handles `POST /`, so every
-  GET on `/api/files...` falls through to Express's default 404).
-- `routes/fileRoutes.js` — the router my task built — is never `app.use`d
-  anywhere, so `listFiles`, `getFile` and `downloadFile` are dead code in the
-  running app.
-
-**How to reproduce**
-
-1. Start the backend (`npm start` in `backend/`).
-2. Register a user, grab the token:
-   `curl -X POST http://localhost:5000/api/auth/register -H "Content-Type: application/json" -d '{"name":"T","email":"t@x.com","password":"password123"}'`
-3. `curl -i http://localhost:5000/api/files -H "Authorization: Bearer <token>"`
-4. Actual: `HTTP/1.1 404 Not Found`, `Content-Type: text/html; charset=utf-8`,
-   body is Express's HTML error page — i.e. not our JSON format at all.
-   Expected: `200` with `{ "success": true, "message": "Files retrieved", "data": { "files": [...], "pagination": {...} } }`.
-
-**Suggested fix (one line to change, one to add)**
-
-```js
-app.use("/api/upload", uploadRoutes);
-app.use("/api/files", fileRoutes);   // was: require('./routes/uploadRoutes')
-app.use("/api/folders", folderRoutes);
-```
-
-(`fileRoutes` is already imported at the top of `app.js` — it's just never used.)
-Also consider removing the duplicated `app.use(rateLimit(...))` while in there.
+(The import for `fileRoutes` is already at the top of the file — it's just
+never used.)
 
 ---
 
-## 2. `fileRoutes.js` does not parse — the backend cannot start at all
+## Problem 2: Two copies of the same file got merged together (already fixed by me)
 
-- **File:** `backend/src/routes/fileRoutes.js`
-- **Owner:** B3 (me) — **already fixed on my branch**, listed here for the record
-- **Severity:** blocker (app crashes on boot)
+**Where:** `backend/src/routes/fileRoutes.js`
+**Who:** me (B3) — **no action needed, just for the record**
 
-**What was wrong**
+**What happened:**
+When the branches were merged, my version of the file and B4's version got
+pasted into one file, one after the other. The app crashed the moment it
+started because the same things were written twice.
 
-The merge of my branch with B4's file-management branch left **two complete
-versions of the router concatenated** in one file: duplicate `const` requires
-(`param` declared twice), my GET routes defined twice (once without
-`authMiddleware`), and a placeholder `DELETE /:id` overwriting B4's real one.
-`node --check` fails: `SyntaxError: Identifier 'param' has already been
-declared`, and `require('./src/app.js')` crashes the process on boot.
-
-**What I did in my file (no one else needs to act)**
-
-Kept one coherent router: my GET routes (with `authMiddleware` + validators +
-`validate`) and B4's `PATCH`/`DELETE` routes exactly as the merged block
-intended (`manageController.updateFile/deleteFile`), plus the `mongoose` require
-that B4's `folder` validator needs.
+**What I did:**
+I cleaned up my own file so it has one clean copy of everything: my
+view/search/download routes, plus B4's rename/delete routes, all working
+together. Done and tested.
 
 ---
 
-## 3. Database never connects — `.env` key and `config/db.js` disagree
+## Problem 3: The app cannot find the database (fix by B1)
 
-- **File:** `backend/src/config/db.js` (and/or `backend/.env` naming)
-- **Owner:** B1 (auth/foundation)
-- **Severity:** blocker (every request 500s without a DB)
+**Where:** `backend/src/config/db.js` (and the `.env` file name)
+**Who:** B1
 
-**What is wrong**
+**The problem, in plain words:**
+The settings file (`.env`) saves the database address under the name
+`MONGODB_URI`. But the code looks for a name called `MONGO_URI`. Different
+name, so the code finds nothing, says "database address is missing," and the
+whole app shuts down.
 
-`.env` defines the connection string as `MONGODB_URI`:
+**How to see it yourself:**
+1. Start the app.
+2. Right away you see: "MongoDB connection failed... got undefined".
 
-```env
-MONGODB_URI=...
-```
+**The fix (one line):**
+Make both names the same. Either:
+- change the code in `db.js` to read `MONGODB_URI` (what the settings file
+  already uses), **or**
+- rename the line in `.env` to `MONGO_URI`.
 
-but `config/db.js` reads:
-
-```js
-await mongoose.connect(process.env.MONGO_URI);
-```
-
-So `process.env.MONGO_URI` is `undefined`, and the app logs:
-
-```
-MongoDB connection failed: The `uri` parameter to `openUri()` must be a string, got "undefined".
-```
-
-then `process.exit(1)`s. Nobody's endpoints can be tested against the real app
-until this is fixed.
-
-**How to reproduce**
-
-1. `cd backend && npm start`
-2. See the failure above immediately after "Server running on port ...".
-
-**Suggested fix (pick one)**
-
-- In `config/db.js`: `await mongoose.connect(process.env.MONGODB_URI);` (match
-  `.env`), **or**
-- rename the key in `.env` / `.env.example` to `MONGO_URI` (and update
-  `.env.example` so the next dev doesn't hit this again).
-
-Either is a one-line change. Bonus: `config/db.js` could log *which* env var it
-looked for when it's missing, to make this class of bug obvious.
+Pick one and tell everyone which name is the official one, so this doesn't
+happen again. (Also update `.env.example` to match.)
 
 ---
 
-## 4. Cloudinary account rejects all uploads — `cloud_name is disabled` (HTTP 401)
+## Problem 4: Our Cloudinary account is turned off (fix by B2)
 
-- **File:** `backend/src/services/cloudinaryService.js` / Cloudinary account config (not a code bug)
-- **Owner:** B2 (upload/File model)
-- **Severity:** blocker for B2's upload feature (and for B3's end-to-end upload→download flow)
+**Where:** the Cloudinary account itself / the keys in `.env`
+**Who:** B2
 
-**What is wrong**
+**The problem, in plain words:**
+Every upload fails. The reason is not the code — Cloudinary itself is saying
+"this account is disabled". Our login keys in `.env` point to a cloud account
+that is switched off (maybe it ran out or got suspended).
 
-Uploading through B2's endpoint (`POST /api/upload`) fails with a 500. The
-server log shows Cloudinary rejecting the request:
+**How to see it yourself:**
+1. Start the app and log in.
+2. Try to upload any file.
+3. Upload fails with "Something went wrong", and in the app's black window you
+   see: `cloud_name is disabled`.
 
-```
-{ message: 'cloud_name is disabled', name: 'Error', http_code: 401 }
-```
+**The fix:**
+1. Log in to the Cloudinary website and check the account.
+2. Either turn the account back on, or make a new one.
+3. Put the new keys (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
+   `CLOUDINARY_API_SECRET`) into `.env`.
 
-The credentials in `.env` point at a Cloudinary cloud that is disabled (likely a
-free-tier account that was suspended/disabled, or placeholder credentials).
-
-**How to reproduce**
-
-1. Start the backend (after fixing issues 1–3).
-2. `curl -X POST http://localhost:5000/api/upload -H "Authorization: Bearer <token>" -F "file=@some.png"`
-3. Actual: `500 {"success":false,"message":"Something went wrong while uploading the file"}`.
-   Expected: `201` with the created file document.
-
-**Suggested fix**
-
-Log into the Cloudinary dashboard and check the cloud named in
-`CLOUDINARY_CLOUD_NAME`: either re-enable/verify the account, or create a new
-cloud and update `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` /
-`CLOUDINARY_API_SECRET` in `.env`.
-
-Note for whoever tests end-to-end: until this is fixed, `File` documents can be
-created directly in MongoDB (with any reachable `cloudUrl`) to exercise B3's
-endpoints — that's exactly how I verified my part; the code paths in
-`fileController.js` don't care where `cloudUrl` points.
+**Good to know:** while the account is off, the rest of the team can still test
+their parts by putting file records straight into the database by hand. That's
+how I tested mine.
 
 ---
 
-## Minor / informational
+## Small problems (not urgent, but should be cleaned up)
 
-### 5. Login rate limiter counts every request against the global limiter (double limiting)
+**5. The "too many requests" block is counted twice (B1, `app.js`).**
+The same limit rule is added to the app two times. So every request uses up two
+turns instead of one, and users hit the limit twice as fast. Keep it once.
 
-- **File:** `backend/src/app.js`
-- **Owner:** B1 (auth/foundation)
-- **Severity:** minor
+**6. The health check lies (B1, `app.js`).**
+The "is the app ok?" address (`/api/health`) says "all good" even when the
+database is down. It should say "not ok" when the database is off.
 
-`app.js` applies a global `rateLimit({ windowMs: 15min, limit: 100 })` **twice**
-(`app.use(rateLimit(...))` appears two times), and there's also an unused local
-`loginLimiter` copy next to the real one in `middleware/rateLimiters.js`. Effect:
-each login attempt burns 2 of the 100 requests per IP per 15 min, and the code
-is confusing to read. Suggested fix: keep exactly one global limiter and rely on
-`loginLimiter` from `middleware/rateLimiters.js` for `/api/auth/login`.
-
-### 6. `app.js` health endpoint does not reflect DB status
-
-- **File:** `backend/src/app.js`
-- **Owner:** B1 (auth/foundation)
-- **Severity:** informational
-
-`GET /api/health` returns 200 even when the DB connection failed, so
-orchestrators/teammates can't distinguish healthy from broken. Suggested: check
-`mongoose.connection.readyState === 1` and return 503 otherwise.
-
-### 7. Upload endpoint validates `folderId` shape but not ownership
-
-- **File:** `backend/src/controllers/uploadController.js`
-- **Owner:** B2 (upload/File model)
-- **Severity:** minor (data-integrity, not a leak of file contents)
-
-`uploadFile` only checks `mongoose.Types.ObjectId.isValid(folderId)` (there's
-even a `TODO: confirm with B4` in the code). A user can attach their new upload
-to **another user's folder ID**. B3's list endpoint already scopes folder
-filtering to the owner (I added that check), so the file would be invisible
-under that folder for everyone — but the DB ends up with a file pointing at a
-folder it doesn't belong to. Suggested: same pattern as
-`manageController.updateFile` — `Folder.findOne({ _id: folderId, owner: req.user._id })`
-and reject with 400/404 when not found.
-
-### 8. B2's file-upload probe returned an HTML 404 in my test app
-
-- **File:** none (test-harness artifact, for transparency)
-- **Owner:** n/a
-
-In my isolated test app I only mounted auth/files/folders routers, so
-`POST /api/upload` correctly answered Express's HTML 404 there. Through the real
-`app.js` the endpoint exists and fails with issue 4. No action needed — included
-so nobody chases the "Cannot POST /api/upload" line if they re-run my suite.
+**7. Upload lets files go into someone else's folder (B2, `uploadController.js`).**
+When uploading, the code only checks that the folder's ID *looks* correct — not
+that the folder belongs to you. So you can hang your file on another person's
+folder. B2 already left a note (`TODO`) in the code about this. The fix: check
+the folder belongs to the logged-in user before saving the file there.
 
 ---
 
-## What I changed in my own files (for the record)
+## What I changed in my own files (just so everyone knows)
 
-- `backend/src/routes/fileRoutes.js` — resolved the broken merge (issue 2): one
-  router, my GET routes authenticated + validated, B4's PATCH/DELETE wired to
-  `manageController`.
-- `backend/src/controllers/fileController.js` — (a) `?folder=` with an invalid
-  ObjectId previously bubbled a Mongo `CastError` → 500 with a raw message; now
-  returns a friendly 400; (b) folder filter now verifies the folder belongs to
-  the caller (`Folder.findOne({ _id, owner })`), so users can't probe other
-  users' folder IDs (404 otherwise); (c) download response now sets
-  `Connection: close` and cancels the upstream Cloudinary stream when the
-  client disconnects mid-transfer.
+- `fileRoutes.js` — cleaned up the merged mess (Problem 2).
+- `fileController.js` — three small safety improvements:
+  - a wrong folder ID now gives a friendly "not valid" message instead of a
+    scary error;
+  - you can only list files inside **your own** folders, so nobody can peek at
+    other people's folders;
+  - when someone stops a download halfway, we stop pulling the file from
+    Cloudinary too, instead of leaving it running.
 
-## Verification summary (my part)
+## What I tested (and it all passed)
 
-39/39 automated checks passed, covering: owner-scoped list, search (incl. regex
-metacharacters), type filter (image/document/other), folder filter, newest-first
-default sort, page/limit + pagination info, out-of-range page, details by ID,
-download (exact bytes, `Content-Disposition` filename, content-type, 502 +
-friendly message on unreachable storage), no-token/invalid-token 401s, malformed
-ID 400, non-existent ID 404, cross-user details/download/folder 404 (no data
-leaks), invalid `type` 400, `page=0/-1/abc` defaulting, `limit=999` clamping,
-and `{ success, message, data }` shape on every response.
+39 checks in total: listing files, searching, filtering by type and folder,
+newest-first order, page sizes, single file view, downloading (the downloaded
+file matches the original, byte for byte, with the right name), wrong or missing
+login tokens, wrong IDs, trying to open another user's files (blocked, no
+leaking), and every reply following our standard `{ success, message, data }`
+shape.
+
+**Bottom line:** my part is done and tested. Once B1 fixes Problems 1 and 3, and
+B2 fixes Problem 4, the whole flow should work end to end.
