@@ -164,15 +164,27 @@ const downloadFile = async (req, res, next) => {
     }
 
     const headers = {
-      "Content-Type": upstream.headers.get("content-type") || file.mimeType || "application/octet-stream",
+      // Trust the type we recorded at upload time first: Cloudinary serves raw
+      // files (txt, zip, pdf) with a generic content-type, while file.mimeType
+      // describes the real bytes the user uploaded.
+      "Content-Type": file.mimeType || upstream.headers.get("content-type") || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${filename}"`,
       // We pipe a one-shot stream straight through — keep proxies/agents from
       // trying to reuse this connection for another request.
       Connection: "close",
     };
-    for (const h of ["content-length", "content-range", "accept-ranges"]) {
+    for (const h of ["content-range", "accept-ranges"]) {
       const value = upstream.headers.get(h);
       if (value) headers[h] = value;
+    }
+    // fetch already decoded any content-encoding (e.g. gzip), so the bytes we
+    // pipe are no longer the wire bytes Cloudinary sent — the wire content-length
+    // would promise the client more bytes than we deliver and break the download.
+    // Only forward content-length for unencoded bodies, and never forward
+    // content-encoding itself: the stream we pipe is already decoded.
+    if (!upstream.headers.get("content-encoding")) {
+      const contentLength = upstream.headers.get("content-length");
+      if (contentLength) headers["content-length"] = contentLength;
     }
 
     // 200 for full downloads, 206 when the client sent a Range header and
