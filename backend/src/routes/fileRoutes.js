@@ -1,8 +1,10 @@
 const router = require("express").Router();
-const { query, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
+const mongoose = require("mongoose");
 const authMiddleware = require("../middleware/authMiddleware");
 const validate = require("../middleware/validate");
-const { listFiles, getFile, downloadFile, deleteFile } = require("../controllers/fileController");
+const { listFiles, getFile, downloadFile } = require("../controllers/fileController");
+const { updateFile, deleteFile } = require("../controllers/manageController");
 
 // GET /api/files — list/search/filter/paginate the logged-in user's files.
 // page/limit are intentionally NOT rejected here: the controller silently
@@ -32,20 +34,7 @@ router.get("/", authMiddleware, listValidators, validate, listFiles);
 router.get("/:id/download", authMiddleware, idValidator, validate, downloadFile);
 router.get("/:id", authMiddleware, idValidator, validate, getFile);
 
-// NOTE: deleteFile is owned by another teammate's task — left as the placeholder.
-router.delete("/:id", deleteFile);
-const { body, param } = require("express-validator");
-const mongoose = require("mongoose");
-
-const authMiddleware = require("../middleware/authMiddleware");
-const validate = require("../middleware/validate");
-const { listFiles, getFile, downloadFile } = require("../controllers/fileController");
-const { updateFile, deleteFile } = require("../controllers/manageController");
-
-router.get("/", listFiles);
-router.get("/:id", getFile);
-router.get("/:id/download", downloadFile);
-
+// PATCH and DELETE are owned by the file-management task (B4).
 router.patch(
   "/:id",
   authMiddleware,

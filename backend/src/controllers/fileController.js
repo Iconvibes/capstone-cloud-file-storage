@@ -6,6 +6,9 @@ const mongoose = require("mongoose");
 const File = mongoose.models.File || require("../models/File");
 const { successResponse, errorResponse } = require("../utils/apiResponse");
 
+// Same lazy pattern as File: works no matter which teammate's module loaded first.
+const Folder = mongoose.models.Folder || require("../models/Folder");
+
 // Pagination defaults for the list endpoint
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -54,7 +57,19 @@ const listFiles = async (req, res, next) => {
     }
 
     if (req.query.folder && String(req.query.folder).trim() !== "") {
-      query.folder = String(req.query.folder).trim();
+      const folderId = String(req.query.folder).trim();
+      // Validate here as a second line of defense: an invalid ObjectId would
+      // otherwise surface as an ugly CastError 500 instead of a friendly 400.
+      if (!mongoose.Types.ObjectId.isValid(folderId)) {
+        return errorResponse(res, "Invalid folder ID", 400);
+      }
+      // Filter only within the caller's own folders — a folder ID belonging to
+      // another user behaves as "not found" so it can't be probed for existence.
+      const ownFolder = await Folder.findOne({ _id: folderId, owner: req.user._id }).select("_id");
+      if (!ownFolder) {
+        return errorResponse(res, "Folder not found", 404);
+      }
+      query.folder = folderId;
     }
 
     // countDocuments and find run as two parallel queries — one round trip each
@@ -151,6 +166,9 @@ const downloadFile = async (req, res, next) => {
     const headers = {
       "Content-Type": upstream.headers.get("content-type") || file.mimeType || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${filename}"`,
+      // We pipe a one-shot stream straight through — keep proxies/agents from
+      // trying to reuse this connection for another request.
+      Connection: "close",
     };
     for (const h of ["content-length", "content-range", "accept-ranges"]) {
       const value = upstream.headers.get(h);
@@ -166,9 +184,13 @@ const downloadFile = async (req, res, next) => {
     upstreamStream.pipe(res);
 
     // If the client hangs up mid-transfer, stop pulling from the cloud storage
+    // and cancel the upstream body, or its connection stays open until EOF.
     res.on("close", () => {
       if (!res.writableEnded) {
         upstreamStream.destroy();
+        if (typeof upstream.body.cancel === "function") {
+          upstream.body.cancel().catch(() => {});
+        }
       }
     });
   } catch (err) {
