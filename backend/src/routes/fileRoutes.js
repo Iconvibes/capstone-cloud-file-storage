@@ -35,20 +35,6 @@ router.get("/", authMiddleware, listValidators, validate, listFiles);
 router.get("/:id/download", authMiddleware, idValidator, validate, downloadFile);
 router.get("/:id", authMiddleware, idValidator, validate, getFile);
 
-// NOTE: deleteFile is owned by another teammate's task — left as the placeholder.
-router.delete("/:id", deleteFile);
-const { body, param } = require("express-validator");
-const mongoose = require("mongoose");
-
-const authMiddleware = require("../middleware/authMiddleware");
-const validate = require("../middleware/validate");
-const { listFiles, getFile, downloadFile } = require("../controllers/fileController");
-const { updateFile, deleteFile } = require("../controllers/manageController");
-
-router.get("/", listFiles);
-router.get("/:id", getFile);
-router.get("/:id/download", downloadFile);
-
 router.patch(
   "/:id",
   authMiddleware,
