@@ -1,52 +1,64 @@
-const File = require('../models/file');
-const {uploaadToCloudinary} = require('../services/cloudinaryservice');
-
-const { success, error } = require('../utils/apiResponse');
+const File = require('../models/File');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
+const { successResponse, errorResponse } = require('../utils/apiResponse');
 const mongoose = require('mongoose');
+
+function getFileType(mimetype) {
+  if (mimetype.startsWith('image/')) return 'image';
+  if (
+    mimetype === 'application/pdf' ||
+    mimetype.includes('word') ||
+    mimetype.includes('excel') ||
+    mimetype.includes('powerpoint') ||
+    mimetype.includes('spreadsheet') ||
+    mimetype.includes('presentation') ||
+    mimetype === 'text/plain'
+  ) return 'document';
+  return 'other';
+}
 
 async function uploadFile(req, res) {
   try {
-    // 1. File presence check
     if (!req.file) {
-      return error(res, 400, 'No file selected');
+      return errorResponse(res, 'No file selected', 400);
     }
 
-    // 2. folderId validation (if provided)
     const { folderId } = req.body;
     if (folderId) {
       if (!mongoose.Types.ObjectId.isValid(folderId)) {
-        return error(res, 400, 'Invalid folder');
+        return errorResponse(res, 'Invalid folder', 400);
       }
-        const folder = await File.findOne({ _id: folderId, owner: req.user.id, type: 'folder' });
+      // TODO: confirm with B4 — this should likely query the Folder model, not File
+      // const folder = await Folder.findOne({ _id: folderId, owner: req.user.id });
     }
 
-    // 3. Upload to Cloudinary
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: `cloudfilestorageapp/${req.user.id}`,
     });
 
-    // 4. Save record in MongoDB
     const file = await File.create({
-      name: req.file.originalname,
-      type: req.file.mimetype,
-      size: req.file.size,
-      cloudUrl: result.secure_url,
       owner: req.user.id,
       folder: folderId || null,
+      originalName: req.file.originalname,
+      displayName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      fileType: getFileType(req.file.mimetype),
+      size: req.file.size,
+      cloudUrl: result.secure_url,
+      cloudPublicId: result.public_id,
     });
 
-    return success(res, 201, 'File uploaded successfully', file);
+    return successResponse(res, file, 'File uploaded successfully', 201);
   } catch (err) {
     if (err.message === 'FILE_TYPE_NOT_ALLOWED') {
-      return error(res, 400, 'File type not allowed');
+      return errorResponse(res, 'File type not allowed', 400);
     }
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return error(res, 400, 'File is too large');
+      return errorResponse(res, 'File is too large', 400);
     }
     console.error(err);
-    return error(res, 500, 'Something went wrong while uploading the file');
+    return errorResponse(res, 'Something went wrong while uploading the file', 500);
   }
 }
 
 module.exports = { uploadFile };
-
