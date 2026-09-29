@@ -1,5 +1,5 @@
 const File = require('../models/file');
-const {uploaadToCloudinary} = require('../services/cloudinaryservice');
+const {uploadToCloudinary} = require('../services/cloudinaryservice');
 
 const { success, error } = require('../utils/apiResponse');
 const mongoose = require('mongoose');
@@ -18,6 +18,10 @@ async function uploadFile(req, res) {
         return error(res, 400, 'Invalid folder');
       }
         const folder = await File.findOne({ _id: folderId, owner: req.user.id, type: 'folder' });
+   
+     if (!folder) {
+        return error(res, 400, 'Folder not found');
+      }
     }
 
     // 3. Upload to Cloudinary
