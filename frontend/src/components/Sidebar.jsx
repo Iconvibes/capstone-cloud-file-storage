@@ -1,4 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { FolderPlus, Home, Share2, Star, Trash2, Folder as FolderIcon, Settings, Files } from "lucide-react";
 import { Brand, Button } from "./ui.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
@@ -13,8 +14,9 @@ const NAV = [
 
 export default function Sidebar({ onNewFolder, onUpload }) {
   const navigate = useNavigate();
-  const { folders, storage, user } = useLibrary();
-  const recent = folders.slice(0, 4);
+  const { folders, storage, user, deleteFolder } = useLibrary();
+  const [deletingId, setDeletingId] = useState("");
+  const recent = folders;
   const usedPct = storage ? Math.min(100, Math.round((storage.usedGb / storage.totalGb) * 100)) : 0;
 
   return (
@@ -40,11 +42,28 @@ export default function Sidebar({ onNewFolder, onUpload }) {
         </p>
         <nav className="side-nav side-folders" aria-label="Folders">
           {recent.map((folder) => (
-            <NavLink key={folder.id} to={`/app/files/folder/${folder.id}`} className="side-link side-folder-link">
-              <span className="side-dot" aria-hidden="true" />
-              <span className="side-folder-name">{folder.name}</span>
-              <b>{folder.fileCount}</b>
-            </NavLink>
+            <div key={folder.id} className="side-folder-row">
+              <NavLink to={`/app/files/folder/${folder.id}`} className="side-link side-folder-link">
+                <span className="side-dot" aria-hidden="true" />
+                <span className="side-folder-name">{folder.name}</span>
+                <b>{folder.fileCount}</b>
+              </NavLink>
+              <button
+                type="button"
+                className="side-folder-delete"
+                aria-label={`Delete ${folder.name} folder`}
+                title="Delete folder"
+                disabled={deletingId === folder.id}
+                onClick={async () => {
+                  if (!window.confirm(`Delete “${folder.name}”? Its files will move to My Files.`)) return;
+                  setDeletingId(folder.id);
+                  await deleteFolder(folder.id);
+                  setDeletingId("");
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           ))}
         </nav>
       </div>

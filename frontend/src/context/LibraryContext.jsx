@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import * as mockApi from "../services/mockApi";
+import api from "../services/api";
+import { friendlyError, normalizeFile, unwrap } from "../services/f2Api";
 
 const LibraryContext = createContext(null);
 
@@ -78,16 +80,19 @@ export function LibraryProvider({ children }) {
   );
 
   const renameFile = useCallback(
-    async (fileId, name) => {
+    async (fileId, name, folderId) => {
       try {
-        const updated = await mockApi.renameFile(fileId, name);
+        const data = unwrap(await api.patch(`/files/${fileId}`, { displayName: name, folderId: folderId || null }));
+        const updated = normalizeFile(data.file ?? data);
         setLibrary((state) => ({
           ...state,
-          files: state.files.map((file) => (file.id === fileId ? { ...file, name: updated.name, updatedAt: updated.updatedAt } : file)),
+          files: state.files.map((file) => (file.id === fileId ? { ...file, ...updated } : file)),
         }));
-        pushToast({ message: "Renamed" });
-      } catch {
-        pushToast({ tone: "error", message: "Rename failed. Try again." });
+        pushToast({ message: "File details updated" });
+        return updated;
+      } catch (error) {
+        pushToast({ tone: "error", message: friendlyError(error, "Unable to update this file.") });
+        return null;
       }
     },
     [pushToast],
@@ -96,28 +101,14 @@ export function LibraryProvider({ children }) {
   const trashFiles = useCallback(
     async (fileIds) => {
       try {
-        await Promise.all(fileIds.map((id) => mockApi.trashFile(id)));
+        await Promise.all(fileIds.map((id) => api.delete(`/files/${id}`)));
         setLibrary((state) => ({
           ...state,
           files: state.files.filter((file) => !fileIds.includes(file.id)),
-          trash: [
-            ...fileIds
-              .map((id) => state.files.find((file) => file.id === id))
-              .filter(Boolean)
-              .map((file) => ({
-                id: file.id,
-                name: file.name,
-                kind: file.kind,
-                size: file.size,
-                deletedAt: new Date().toISOString(),
-                restoreTo: state.folders.find((folder) => folder.id === file.folderId)?.name ?? "My Files",
-              })),
-            ...state.trash,
-          ],
         }));
-        pushToast({ message: fileIds.length > 1 ? `${fileIds.length} items moved to trash` : "Moved to trash" });
-      } catch {
-        pushToast({ tone: "error", message: "Couldn't move to trash. Try again." });
+        pushToast({ message: fileIds.length > 1 ? `${fileIds.length} files deleted` : "File deleted" });
+      } catch (error) {
+        pushToast({ tone: "error", message: friendlyError(error, "Unable to delete the selected files.") });
       }
     },
     [pushToast],
@@ -181,17 +172,46 @@ export function LibraryProvider({ children }) {
   const createFolder = useCallback(
     async (name, parentId = null) => {
       try {
-        const folder = await mockApi.createFolder(name, parentId);
+        const data = unwrap(await api.post("/folders", { name, parentId }));
+        const folder = { ...(data.folder ?? data), id: data.folder?._id ?? data._id ?? data.folder?.id ?? data.id, fileCount: 0 };
         setLibrary((state) => ({ ...state, folders: [...state.folders, folder] }));
         pushToast({ message: `Folder “${name}” created` });
         return folder;
-      } catch {
-        pushToast({ tone: "error", message: "Couldn't create folder. Try again." });
+      } catch (error) {
+        pushToast({ tone: "error", message: friendlyError(error, "Unable to create this folder.") });
         return null;
       }
     },
     [pushToast],
   );
+
+  const deleteFolder = useCallback(
+    async (folderId) => {
+      try {
+        await api.delete(`/folders/${folderId}`);
+        setLibrary((state) => ({
+          ...state,
+          folders: state.folders.filter((folder) => folder.id !== folderId),
+          files: state.files.map((file) => (file.folderId === folderId ? { ...file, folderId: null } : file)),
+        }));
+        pushToast({ message: "Folder deleted. Its files are now in My Files." });
+        return true;
+      } catch (error) {
+        pushToast({ tone: "error", message: friendlyError(error, "Unable to delete this folder.") });
+        return false;
+      }
+    },
+    [pushToast],
+  );
+
+  const upsertFile = useCallback((serverFile) => {
+    const file = normalizeFile(serverFile?.file ?? serverFile);
+    setLibrary((state) => state ? ({
+      ...state,
+      files: [file, ...state.files.filter((item) => item.id !== file.id)],
+      recentIds: [file.id, ...state.recentIds.filter((id) => id !== file.id)],
+    }) : state);
+  }, []);
 
   const startUpload = useCallback(
     (files, folderId = null) => {
@@ -249,17 +269,18 @@ export function LibraryProvider({ children }) {
 
   const shareFile = useCallback(
     async (fileId, options) => {
-      const result = await mockApi.shareFile(fileId, options);
-      if (result && library) {
-        setLibrary((state) => ({
-          ...state,
-          files: state.files.map((file) => (file.id === fileId ? { ...file, shared: true } : file)),
-        }));
-      }
+      const data = unwrap(await api.post(`/files/${fileId}/share`, options || {}));
+      const result = data.shareLink ?? data.link ?? data;
+      if (library) setLibrary((state) => ({ ...state, files: state.files.map((file) => (file.id === fileId ? { ...file, shared: true } : file)) }));
       return result;
     },
     [library],
   );
+
+  const revokeShare = useCallback(async (fileId) => {
+    await api.delete(`/files/${fileId}/share`);
+    setLibrary((state) => state ? ({ ...state, files: state.files.map((file) => (file.id === fileId ? { ...file, shared: false } : file)) }) : state);
+  }, []);
 
   const value = useMemo(() => {
     const base = library ?? { folders: [], files: [], sharedWithMe: [], trash: [], activity: [], recentIds: [], storage: null, user: null };
@@ -285,7 +306,10 @@ export function LibraryProvider({ children }) {
       deleteForever,
       emptyTrash,
       createFolder,
+      deleteFolder,
       shareFile,
+      revokeShare,
+      upsertFile,
       uploadOpen,
       setUploadOpen,
       newFolderOpen,
@@ -304,7 +328,7 @@ export function LibraryProvider({ children }) {
     library, loading, error, load, sort, toasts, pushToast, dismissToast, uploads,
     startUpload, clearFinishedUploads, cancelUpload, requireLibrary, toggleStar,
     renameFile, trashFiles, restoreFiles, deleteForever, emptyTrash, createFolder,
-    shareFile, uploadOpen, newFolderOpen,
+    deleteFolder, shareFile, revokeShare, upsertFile, uploadOpen, newFolderOpen,
   ]);
 
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>;

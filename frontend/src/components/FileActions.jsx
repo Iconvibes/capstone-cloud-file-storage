@@ -1,19 +1,44 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Eye, FolderInput, Pencil, Share2, Star, Trash2 } from "lucide-react";
+import { Download, Eye, FolderInput, Share2, Star, Trash2 } from "lucide-react";
 import { BottomSheet } from "./ui.jsx";
 import { FileIcon } from "./FileIcon.jsx";
 import { formatBytes, formatDate, kindLabel } from "./hooks.js";
 import { useLibrary } from "../context/LibraryContext.jsx";
+import { downloadToDevice, friendlyError } from "../services/f2Api";
 
-// Action sheet for a file row or card: preview, share, rename, star, trash.
+// File actions used from a file row or card. Share and rename/move use the
+// existing page-level modals; download and delete call the API directly.
 export default function FileActions({ file, onClose }) {
   const navigate = useNavigate();
   const { toggleStar, trashFiles, pushToast } = useLibrary();
+  const [busy, setBusy] = useState(false);
   if (!file) return null;
 
   const closeAnd = (action) => () => {
     onClose();
     action?.();
+  };
+
+  const download = async () => {
+    setBusy(true);
+    try {
+      await downloadToDevice(`/files/${file.id}/download`, file.name);
+      pushToast({ message: "Download started" });
+      onClose();
+    } catch (error) {
+      pushToast({ tone: "error", message: friendlyError(error, "Unable to download this file.") });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm(`Delete “${file.name}”? This cannot be undone.`)) return;
+    setBusy(true);
+    await trashFiles([file.id]);
+    setBusy(false);
+    onClose();
   };
 
   return (
@@ -27,7 +52,7 @@ export default function FileActions({ file, onClose }) {
           </small>
         </div>
       </div>
-      <div className="fa-list">
+      <div className={`fa-list ${busy ? "is-busy" : ""}`}>
         <button type="button" onClick={closeAnd(() => navigate(`/app/preview/${file.id}`))}>
           <Eye size={18} /> Preview
         </button>
@@ -38,17 +63,17 @@ export default function FileActions({ file, onClose }) {
           <Star size={18} />
           {file.starred ? "Remove from Starred" : "Add to Starred"}
         </button>
-        <button type="button" onClick={closeAnd(() => pushToast({ message: "Download started (demo)" }))}>
-          <Download size={18} /> Download
+        <button type="button" disabled={busy} onClick={download}>
+          <Download size={18} /> {busy ? "Preparing download…" : "Download"}
         </button>
         <button type="button" onClick={closeAnd(() => navigate(`/app/files?share=${file.id}`))}>
           <Share2 size={18} /> Share
         </button>
         <button type="button" onClick={closeAnd(() => navigate(`/app/files?rename=${file.id}`))}>
-          <Pencil size={18} /> Rename
+          <FolderInput size={18} /> Rename or move
         </button>
-        <button type="button" className="danger" onClick={closeAnd(() => trashFiles([file.id]))}>
-          <Trash2 size={18} /> Move to trash
+        <button type="button" className="danger" disabled={busy} onClick={remove}>
+          <Trash2 size={18} /> {busy ? "Deleting…" : "Delete file"}
         </button>
       </div>
     </BottomSheet>

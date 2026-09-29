@@ -2565,6 +2565,44 @@ body {
   font-size: 14px;
 }
 
+.side-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.side-folder-row .side-folder-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-folder-delete {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--ink-3);
+  opacity: 0;
+  transition: opacity .15s ease, background .15s ease, color .15s ease;
+}
+
+.side-folder-row:hover .side-folder-delete,
+.side-folder-delete:focus-visible {
+  opacity: 1;
+}
+
+.side-folder-delete:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.side-folder-delete:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
 .side-folder-name {
   flex: 1;
   min-width: 0;
@@ -3752,6 +3790,34 @@ body {
   border-radius: 99px;
   background: linear-gradient(90deg, var(--brand), var(--sunrise));
   transition: width 0.15s ease;
+}
+
+.upload-progress-status {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.upload-progress-status progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 5px;
+  accent-color: var(--brand);
+}
+
+.form-success {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.muted {
+  color: var(--ink-3);
+  font-size: 13px;
 }
 
 .up-cancel {
