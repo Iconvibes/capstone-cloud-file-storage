@@ -6,19 +6,7 @@ const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return errorResponse(res, "Name, email and password are required", 400);
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return errorResponse(res, "Please provide a valid email", 400);
-    }
-
-    if (password.length < 8) {
-      return errorResponse(res, "Password must be at least 8 characters", 400);
-    }
-
+    // email/password are already validated & normalized by registerSchema
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return errorResponse(res, "Email already in use", 409);
@@ -42,10 +30,7 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return errorResponse(res, "Email and password are required", 400);
-    }
-
+    // email/password are already validated & normalized by loginSchema
     // password has `select: false` on the model, so explicitly ask for it here
     const user = await User.findOne({ email }).select("+password");
 
