@@ -22,4 +22,16 @@ const optionalNullableObjectId = z.preprocess(
   objectId.optional()
 );
 
-module.exports = { objectId, displayName, optionalQuery, optionalNullableObjectId };
+// Share expiry: "" or null means "no expiry". Anything else must parse as a
+// real date AND be in the future (evaluated against the server clock).
+const optionalFutureDate = z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  z
+    .coerce
+    .date()
+    .refine((d) => !Number.isNaN(d.getTime()), "Expiry must be a valid date")
+    .refine((d) => d.getTime() > Date.now(), "Expiry must be a date in the future")
+    .optional()
+);
+
+module.exports = { objectId, displayName, optionalQuery, optionalNullableObjectId, optionalFutureDate };

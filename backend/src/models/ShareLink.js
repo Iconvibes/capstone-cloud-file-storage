@@ -9,4 +9,11 @@ const shareLinkSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// Database-level guarantee: only ONE active share link may exist per file.
+// Revoked (isActive: false) links are allowed to accumulate as history.
+shareLinkSchema.index(
+  { file: 1 },
+  { unique: true, partialFilterExpression: { isActive: true } }
+);
+
 module.exports = mongoose.model("ShareLink", shareLinkSchema);

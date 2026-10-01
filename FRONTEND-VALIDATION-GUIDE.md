@@ -147,6 +147,41 @@ the file keeps its current folder.
 - Success → **201** with the created file document.
 - "No file selected" → **400** when `file` is missing.
 
+### 3.11 Share links (B5)
+
+**Create / revoke — owner only (needs `Authorization: Bearer <token>`)**
+
+`POST /api/files/:id/share`
+
+| Field | Rule |
+|---|---|
+| `:id` | valid `ObjectId` → else **400** |
+| `expiresAt` | **optional**. A valid date **in the future** (`YYYY-MM-DD` or full ISO). Omit it, or send `null` / `""` for a link that never expires. A past date or unparseable value → **400** |
+
+- Success → **201** `{ token, shareUrl, expiresAt, isActive }`. **Copy `shareUrl`
+  and send it to others** — it is already prefixed with the frontend origin.
+- Calling it again for the same file while a link is still active returns
+  **200** with the **same** `shareUrl` (safe to call on every modal open).
+- Not your file → **403**; missing file → **404**.
+
+`DELETE /api/files/:id/share` — always **200** (also when there was nothing to
+revoke). After revoking, the old `shareUrl` stops working immediately.
+
+**Open a shared link — public, no login**
+
+`GET /api/share/:token` and `GET /api/share/:token/download`
+
+- These two are reached **through the link itself** — never send the user's JWT
+  to them, and they work for logged-out visitors.
+- `GET /api/share/:token` → **200** with only the file's details
+  (`displayName`, `originalName`, `fileType`, `mimeType`, `size`, `createdAt`,
+  `expiresAt`). It never includes the owner's details or the storage URL.
+- Unknown / already revoked token → **404**; a token whose expiry has passed →
+  **410**. Both come back with the same friendly message:
+  **"This link is invalid or has expired."** — show exactly that on your
+  `/share/:token` page (no technical detail).
+- Download problems with valid storage → **502** → "Storage temporarily unavailable".
+
 ---
 
 ## 4. Checklist of things to align in the frontend
@@ -210,6 +245,21 @@ into useful messages automatically.
 - File size/type errors (400) should map to friendly copy: "File type not
   allowed", "File is too large", "No file selected".
 
+### 4.8 Sharing a file (for the share button + the public `/share/:token` page)
+
+- The **Share** button only needs `POST /api/files/:id/share`; the response's
+  `shareUrl` is the link to copy. Call it every time the modal opens — it never
+  creates a duplicate link while one is still active (it returns the same
+  `shareUrl` with **200** instead of **201**).
+- The public page `GET /api/share/:token` needs **no token**. Handle three cases:
+  **200** (show file name/type/size + a Download button), **404** and **410** —
+  the last two both mean "This link is invalid or has expired."
+- Your frontend route should be `/share/:token` (that is where the generated
+  `shareUrl` points). The download button can point straight at
+  `/api/share/:token/download`.
+- The **Revoke** button calls `DELETE /api/files/:id/share`, then closes the modal
+  and drops the copied link.
+
 ---
 
 ## 5. Status-code cheat sheet (backend → your handling)
@@ -221,6 +271,7 @@ into useful messages automatically.
 | `403` | Logged in but not the owner | Show "You don't have access to this" |
 | `404` | Not found (bad id that is validly formatted) | Show "Not found" |
 | `409` | Duplicate (email / folder name) | Show friendly duplicate message |
+| `410` | Share link existed but has expired | Show "This link is invalid or has expired." |
 | `429` | Rate-limited (login 5/15min) | Show "Too many attempts, wait a bit" |
 | `416` | Requested file range not available (download) | Show "That section of the file isn't available" |
 | `502` | File storage unavailable (download) | Show "Storage temporarily unavailable" |
@@ -236,13 +287,15 @@ backend/src/
 │   ├── helpers.js         ← ObjectId / name rules / query helpers
 │   ├── auth.validator.js  ← register + login
 │   ├── folder.validator.js← folders
-│   └── file.validator.js  ← files list/patch/upload
+│   ├── file.validator.js  ← files list/patch/upload
+│   └── share.validator.js  ← share links (token + expiry)
 ├── middleware/validate.js ← the middleware that applies the rules
 └── routes/…               ← each route lists which schema(s) it uses
 ```
 
-`Share` endpoints (`/api/share`) will follow the same pattern when the sharing
-feature (B5) is built — expect the same error format there.
+The `Share` endpoints (`/api/share`) follow exactly the same pattern — the rules
+live in `validators/share.validator.js` and the public link endpoints reject bad
+input with the same `400` + `errors[]` format described in §1.
 
 ---
 
