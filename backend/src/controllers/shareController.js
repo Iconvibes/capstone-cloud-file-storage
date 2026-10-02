@@ -4,6 +4,7 @@ const { Readable } = require("node:stream");
 const ShareLink = require("../models/ShareLink");
 const File = require("../models/File");
 const { successResponse, errorResponse } = require("../utils/apiResponse");
+const { getCloudinaryStream } = require("../services/cloudinaryService");
 
 const EXPIRED_LINK_MESSAGE = "This link is invalid or has expired.";
 
@@ -38,7 +39,7 @@ const createShareLink = async (req, res, next) => {
       return errorResponse(res, "You don't have permission to do that", 403);
     }
 
-    const now = Date.now();
+    const now = new Date();
 
     // Expired-but-still-active links must not be reused or block a fresh one.
     await ShareLink.updateMany(
@@ -67,7 +68,7 @@ const createShareLink = async (req, res, next) => {
         const existing = await ShareLink.findOne({
           file: req.params.id,
           isActive: true,
-          $or: [{ expiresAt: null }, { expiresAt: { $gt: Date.now() } }],
+          $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
         });
         if (existing) {
           return successResponse(res, buildSharePayload(existing), "Shareable link already exists", 200);
@@ -119,7 +120,7 @@ const findValidSharedLink = async (token) => {
   return link;
 };
 
-const isExpired = (link) => Boolean(link.expiresAt) && Number(link.expiresAt) <= Date.now();
+const isExpired = (link) => Boolean(link.expiresAt) && new Date(link.expiresAt).getTime() <= Date.now();
 
 /**
  * GET /api/share/:token
@@ -184,23 +185,11 @@ const downloadSharedFile = async (req, res, next) => {
       return errorResponse(res, "File storage is unavailable, please try again later", 502);
     }
 
-    let filename = file.displayName || file.originalName;
-    const sanitized = String(filename)
-      .replace(/[^\x20-\x7E]/g, "")
-      .replace(/["\\]/g, "");
-    if (sanitized) {
-      filename = sanitized;
-    }
+    const filename = file.displayName || file.originalName || "download";
+    const encodedFilename = encodeURIComponent(filename);
+    const asciiFilename = filename.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "");
 
-    const upstreamHeaders = {};
-    if (req.headers.range) {
-      upstreamHeaders.Range = req.headers.range;
-    }
-
-    const upstream = await fetch(file.cloudUrl, {
-      redirect: "follow",
-      headers: upstreamHeaders,
-    }).catch(() => null);
+    const upstream = await getCloudinaryStream(file, req.headers.range);
 
     if (!upstream || !upstream.body) {
       return errorResponse(res, "File storage is unavailable, please try again later", 502);
@@ -213,8 +202,8 @@ const downloadSharedFile = async (req, res, next) => {
     }
 
     const headers = {
-      "Content-Type": upstream.headers.get("content-type") || file.mimeType || "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Type": file.mimeType || upstream.headers.get("content-type") || "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${asciiFilename || "download"}"; filename*=UTF-8''${encodedFilename}`,
     };
     for (const h of ["content-length", "content-range", "accept-ranges"]) {
       const value = upstream.headers.get(h);
