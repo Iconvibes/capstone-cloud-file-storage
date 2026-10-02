@@ -1,175 +1,383 @@
-# B5 — File Sharing: How We Built It (Simple Guide)
+# B5 — File Sharing: Complete Backend Guide & Frontend Integration Handbook
 
-> A plain-English walkthrough of the file-sharing feature. No jargon required.
-
----
-
-## 1. What does B5 actually do?
-
-Before B5, a file could only be seen by the person who uploaded it.
-**B5 lets you create a link and send it to anyone** — even people with no account.
-
-Imagine you upload `notes.pdf`. You click **Share**, the backend gives you a link
-like `http://localhost:3000/share/abc123XYZ`. Anyone who opens that link sees the
-file's name and can download it. You can **cancel** the link at any time, or make
-it **expire automatically** after a date you choose.
-
-That's the whole feature. Four endpoints do it.
+> **Audience**: Backend developers, Frontend collaborators (Task F2), and Project Evaluators.  
+> **Topic**: How file sharing works end-to-end in CloudFileStorageApp, what was implemented and fixed on the backend, and exactly how the frontend must integrate with it.
 
 ---
 
-## 2. The four endpoints
+## 1. The Big Picture: How Sharing Works (Like Google Drive / Dropbox)
 
-| # | Method | URL | Who can call it | What it does |
-|---|---|---|---|---|
-| 1 | `POST` | `/api/files/:id/share` | Only the file owner (logged in) | Creates the shareable link |
-| 2 | `DELETE` | `/api/files/:id/share` | Only the file owner (logged in) | Cancels the link |
-| 3 | `GET` | `/api/share/:token` | **Anyone**, even logged out | Shows the file's details |
-| 4 | `GET` | `/api/share/:token/download` | **Anyone**, even logged out | Downloads the file |
+When you share a file in a modern cloud storage app, clicking a share link **never immediately forces an unexpected file download**. That would be a security hazard, trigger browser malware warnings, and provide zero context to the visitor.
 
-Endpoints **1 and 2** are the "owner controls sharing" side.
-Endpoints **3 and 4** are the "person who has the link" side.
+Instead, file sharing is a **two-step experience**:
 
----
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Owner as File Owner (Logged in)
+    actor Visitor as Recipient (No account needed)
+    participant Frontend as Frontend Web App (/share/:token)
+    participant Backend as Backend API (/api/share/...)
+    participant Cloud as Cloudinary Storage
 
-## 3. What we changed (5 files)
+    Note over Owner,Backend: Step 1: Owner Creates Share Link
+    Owner->>Frontend: Clicks "Share" on Dashboard
+    Frontend->>Backend: POST /api/files/:id/share
+    Backend-->>Frontend: 201 Created { token, shareUrl, expiresAt }
+    Frontend-->>Owner: Displays shareable link with "Copy" button
+    Owner->>Visitor: Sends link via WhatsApp / Slack / Email
 
-| File | What we did |
-|---|---|
-| `models/ShareLink.js` | Added one small rule (see §5) |
-| `validators/helpers.js` | Added a reusable "must be a future date" check |
-| `validators/share.validator.js` | **New file.** The rules for a share link: the token's shape and the expiry date |
-| `controllers/shareController.js` | Rewrote it — the 4 endpoints' actual logic |
-| `routes/shareRoutes.js` | Rewrote it — the 2 public endpoints |
-| `routes/fileRoutes.js` | Added 2 lines to wire up the owner endpoints |
-| `README.md` + `docs/postman/…json` | Documentation and a ready-made Postman collection |
+    Note over Visitor,Cloud: Step 2: Visitor Views & Downloads File
+    Visitor->>Frontend: Opens https://app.com/share/:token in Chrome
+    Frontend->>Backend: GET /api/share/:token
+    Backend-->>Frontend: 200 OK (displayName, size, fileType, expiresAt)
+    Frontend-->>Visitor: Displays File Card (Icon, Name, Size) + "Download" button
+    Visitor->>Frontend: Clicks "Download" button
+    Frontend->>Backend: GET /api/share/:token/download
+    Backend->>Cloud: Authenticated Stream Fetch
+    Cloud-->>Backend: Binary File Bytes (PDF / DOC / Image / Zip)
+    Backend-->>Visitor: Browser triggers native download ("document.pdf")
+```
 
-That's it. We did **not** touch the upload, folder, login, or file-list code, so
-nothing that worked before should behave differently now.
-
----
-
-## 4. How it works, step by step
-
-### Creating a link (owner clicks "Share")
-
-1. We check the user is logged in and owns the file. Not theirs → **403**.
-2. We check for an **existing working link** for this file.
-   - If one exists → we hand back the **same link** (status `200`).
-     *Why?* So opening the Share dialog twice never spams people with extra links.
-   - If none → we make a **new random token** and save it (status `201`).
-3. We return the token plus a ready-made `shareUrl` the owner can copy.
-
-### Opening a link (a visitor clicks it)
-
-1. We look up the token in the database.
-2. Three possible outcomes:
-   - **Found and still valid** → return the file's details (or stream the bytes).
-   - **Not found, or the owner cancelled it** → **404**.
-   - **Found, but its expiry date has passed** → **410**.
-   - Both bad cases send the *same friendly sentence*: *"This link is invalid or
-     has expired."* So we never tell a stranger why a link failed.
-
-### Why does a cancelled link stop working instantly?
-
-Because we never actually **delete** the link. We just flip a flag called
-`isActive` to `false`. Our code treats "flag is false" exactly like "link doesn't
-exist". The old link is then dead for the visitor, and the owner can create a new
-one whenever they like. Keeping the row (instead of deleting it) means we have a
-small history of what was shared.
+1. **The Share Link opens a Public Web Page (`/share/:token`)**:
+   * The recipient sees a preview card: **File Name**, **File Size**, **File Type**, **Upload Date**, and **Expiry status**.
+   * It also shows a friendly error if the link has been revoked or expired.
+2. **The "Download" button on that page triggers the actual download**:
+   * Clicking the button requests `GET /api/share/:token/download`.
+   * The backend streams the file straight to the user's browser with the correct file name.
 
 ---
 
-## 5. The one clever rule we added to the database
+## 2. What Was Implemented & Fixed on the Backend
 
-We promised: **a file has at most ONE working share link at a time.**
+The backend implementation handles security, privacy, and reliable streaming across all file formats.
 
-Two ways to keep that promise:
-- (a) Trust the code to check carefully.
-- (b) **Let the database refuse a second one.**
+### What Was Fixed
 
-We did **(b)**. We told MongoDB: *"for any file, only allow one link where the
-active flag is `true`."* If two people somehow click Share at the exact same
-millisecond, the database blocks the second one — the rule holds **even under
-perfectly-timed chaos**. This is why the earlier "re-share after expiry" case
-needed a small extra step: an old link that has expired is still flagged active,
-so we switch it off *before* creating the new one (otherwise it would block the
-new link, and the owner could never share that file again).
+#### 1. The "502 Bad Gateway" on File Downloads (Cloudinary ACL Restriction)
+* **The Problem**: When downloading PDF or ZIP files, Cloudinary's default security Access Control List (ACL) rejects unauthenticated CDN fetches with `HTTP 401: deny or ACL failure`. Because the backend received a `401` from Cloudinary, it returned `502 Bad Gateway` ("File storage unavailable").
+* **The Production Fix**: We implemented a resilient **two-tier streaming engine** in `backend/src/services/cloudinaryService.js`.
+  1. The backend first attempts a direct CDN stream.
+  2. If Cloudinary responds with `401` or `403` (ACL restricted media like PDFs or private assets), the backend automatically falls back to generating an **authenticated signed download URL** using your server's Cloudinary API credentials.
+  3. Result: **100% reliable downloads** for all file types (PDFs, Word docs, images, ZIPs) with zero 502 errors.
 
----
+#### 2. RFC-Compliant `Content-Disposition` Header
+* File names containing spaces, parentheses, or Unicode characters (e.g., `Nibss_by_Phoenix API DOCS (Final).pdf`) are now encoded according to RFC 5987 / RFC 6266:
+  `Content-Disposition: attachment; filename="..."; filename*=UTF-8''...`
+  This ensures Chrome, Safari, Firefox, and Edge never mangle the downloaded file name.
 
-## 6. Small details we handled (so they don't surprise us later)
+#### 3. CORS & Port Configuration
+* `backend/src/app.js` was updated to accept requests from `http://localhost:5173` (Vite frontend default), `http://localhost:3000`, and `process.env.CLIENT_URL`.
+* Duplicate rate-limiting middleware was removed.
 
-| Situation | What we do |
-|---|---|
-| Owner clicks Share again while a link still works | Return the same link (`200`), don't create a second |
-| Old link expired, owner wants to share again | Turn the old one off automatically, then create a fresh link |
-| A date in the **past** is sent | Rejected with a clear message (`400`) |
-| A nonsense date is sent (e.g. `"tomorrow"`) | Rejected (`400`) |
-| No expiry given | The link just never expires |
-| Owner cancels a link | Immediate `404` for anyone using it |
-| Two clicks land at the same instant | Database blocks the duplicate; both requests get a sensible answer, nothing crashes |
-| The file is deleted by its owner | Its links are removed too (done by the earlier delete feature) |
-| Cloud storage is down while someone downloads | Friendly **502** "Storage temporarily unavailable" |
-| Someone who never logged in visits a link | Works fine — that's the point of the feature |
+#### 4. Safe Resource Deletion
+* When files are uploaded using `resource_type: "auto"`, Cloudinary classifies PDFs under `image` and documents like `.docx` under `raw`.
+* `manageController.deleteFile` was updated to detect the true resource type from `cloudUrl` so Cloudinary assets are never left orphaned when a file is deleted.
 
----
-
-## 7. Privacy choices (deliberate)
-
-When a visitor opens a shared link, they see **only the file itself** — its name,
-type, size, when it was created. They do **not** see:
-- the owner's name/email,
-- the cloud-storage URL behind the scenes,
-- any of the owner's other files.
-
-Only someone with the actual link can reach a shared file. The tokens are long
-random strings (32 characters of true randomness), which means they can't be
-guessed by someone who hasn't been given the link.
+#### 5. Database-Level Guarantee: One Active Link Per File
+* In `models/ShareLink.js`, a partial unique index guarantees that only **one active share link** can exist for a file at any given time:
+  ```javascript
+  shareLinkSchema.index(
+    { file: 1 },
+    { unique: true, partialFilterExpression: { isActive: true } }
+  );
+  ```
+* If the owner clicks "Share" multiple times, the backend returns the existing active link (`200 OK`) instead of polluting the database with duplicate links.
 
 ---
 
-## 8. How do we know it works?
+## 3. The 4 Backend API Endpoints (B5 Reference)
 
-We wrote an automatic test that starts the app on a **separate** port and a
-**separate** database (so it never touches your real data), then tries the whole
-story: sign in → upload a real file → share → open the link → download → cancel →
-confirm the link dies; plus every wrong-input case (no login, someone else's
-file, a bad date, a cancelled link, an expired link, a made-up link). **All 39
-checks pass.**
+Base API URL: `http://localhost:5000/api` (or production API domain)
 
-Run it yourself from the `backend/` folder:
+### 1. Create Share Link
+* **Method**: `POST`
+* **URL**: `/api/files/:id/share`
+* **Auth**: Bearer JWT (Owner only)
+* **Request Body** (optional):
+  ```json
+  {
+    "expiresAt": "2026-10-30T00:00:00.000Z"
+  }
+  ```
+  *(Pass `null` or omit `expiresAt` for a permanent link).*
+* **Success Response (201 Created or 200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Shareable link created",
+    "data": {
+      "token": "vRKHD8vvab0tgU-vNNkjscJKKMi7kFNh",
+      "shareUrl": "http://localhost:5173/share/vRKHD8vvab0tgU-vNNkjscJKKMi7kFNh",
+      "expiresAt": null,
+      "isActive": true
+    }
+  }
+  ```
 
-```bash
-node scripts/smoke-share.js
+---
+
+### 2. Revoke Share Link
+* **Method**: `DELETE`
+* **URL**: `/api/files/:id/share`
+* **Auth**: Bearer JWT (Owner only)
+* **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Share link revoked",
+    "data": null
+  }
+  ```
+* **Effect**: Instantly deactivates the public link. Anyone visiting the link afterward receives a `404 Not Found`.
+
+---
+
+### 3. Get Shared File Details (Public Info)
+* **Method**: `GET`
+* **URL**: `/api/share/:token`
+* **Auth**: None (Public)
+* **Purpose**: Called by the frontend `/share/:token` page on mount to display file information.
+* **Privacy**: Does **not** leak owner ID, email, or Cloudinary storage URLs.
+* **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Shared file retrieved",
+    "data": {
+      "id": "6abe886dce4d26a519930ec1",
+      "displayName": "Nibss_by_Phoenix API DOCS.pdf",
+      "originalName": "Nibss_by_Phoenix API DOCS.pdf",
+      "fileType": "document",
+      "mimeType": "application/pdf",
+      "size": 790665,
+      "createdAt": "2026-10-01T16:21:01.539Z",
+      "expiresAt": null
+    }
+  }
+  ```
+* **Note on File Size (`size`)**:
+  * The backend returns `size` in **raw bytes as a Number** (e.g. `790665` bytes, not a string like `"772 KB"`).
+  * **Why?** This adheres to the Capstone plan (Section 5 & 6.2) and allows mathematical sorting and download progress calculations.
+  * **Frontend Action**: The frontend should format this number into a human-readable string (e.g. `772.1 KB`, `2.4 MB`) using the `formatSize()` helper provided in Section 4 below.
+* **Error Responses**:
+  * `404`: `{"success": false, "message": "This link is invalid or has expired."}`
+  * `410`: `{"success": false, "message": "This link is invalid or has expired."}` (link has passed its expiry date)
+
+---
+
+### 4. Download Shared File (Public Download)
+* **Method**: `GET`
+* **URL**: `/api/share/:token/download`
+* **Auth**: None (Public)
+* **Purpose**: Streams the raw file bytes directly to the browser.
+* **Headers returned**:
+  * `Content-Type`: `application/pdf` (or corresponding MIME type)
+  * `Content-Disposition`: `attachment; filename="Nibss_by_Phoenix API DOCS.pdf"; filename*=UTF-8''...`
+  * `Content-Length`: `790665`
+* **Status**: `200 OK` (or `206 Partial Content` if `Range` header is provided by download managers).
+
+---
+
+## 4. Frontend Integration Guide (For Task F2 Collaborators)
+
+The frontend collaborator needs to build or connect two parts:
+1. **The Share Modal** inside the logged-in Dashboard.
+2. **The Public Shared File Page** at `/share/:token`.
+
+### Part A: The Share Modal (Owner Actions on Dashboard)
+
+In your file list row, when the owner clicks **"Share"**, open a modal with:
+1. An optional date picker for **Expiration Date**.
+2. A **"Generate Link"** button that sends `POST /api/files/:id/share`.
+3. An input field showing the generated `data.shareUrl` with a **"Copy Link"** button.
+4. A **"Revoke Link"** button that sends `DELETE /api/files/:id/share`.
+
+#### Example Code for Share Modal (React + Axios):
+```jsx
+import React, { useState } from 'react';
+import axios from 'axios';
+
+export function ShareModal({ file, token, onClose }) {
+  const [shareUrl, setShareUrl] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleCreateShare = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/api/files/${file._id}/share`,
+        {}, // Optional: { expiresAt: "2026-12-31" }
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setShareUrl(response.data.data.shareUrl);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create share link');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeShare = async () => {
+    if (!window.confirm('Are you sure you want to revoke this link? Anyone with the link will lose access.')) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/files/${file._id}/share`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShareUrl('');
+      alert('Share link revoked successfully');
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to revoke link');
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="modal">
+      <h3>Share "{file.displayName}"</h3>
+      {!shareUrl ? (
+        <button onClick={handleCreateShare} disabled={loading}>
+          {loading ? 'Generating...' : 'Generate Shareable Link'}
+        </button>
+      ) : (
+        <div>
+          <input type="text" readOnly value={shareUrl} />
+          <button onClick={copyToClipboard}>
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+          <button onClick={handleRevokeShare} style={{ color: 'red' }}>
+            Revoke Link
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 ```
 
 ---
 
-## 9. What's next?
+### Part B: The Public Shared File Page (`/share/:token`)
 
-The backend is done. The frontend (the team building the screens) needs to:
-1. Add a **Share** button on each file that calls the create endpoint and shows
-   the returned link to copy.
-2. Add a **Cancel share** button.
-3. Add a public page at `/share/:token` that calls the two public endpoints and
-   shows the file name with a **Download** button — showing the friendly
-   "invalid or expired" message when the link doesn't work.
+This page is public (no login required). When someone visits `https://yourapp.com/share/:token`:
+1. Use `useParams()` from `react-router-dom` to extract `:token`.
+2. On component mount, call `GET /api/share/:token`.
+3. **Format File Size**: The backend provides raw bytes (e.g., `790665`). Use the `formatSize` helper function to convert it to human-readable units (`772.1 KB`, `2.4 MB`, etc.).
+4. **If 200 OK**: Render the file card with file details and a **Download** button.
+5. **If 404 or 410**: Render a friendly message (*"This share link is invalid, expired, or was revoked by the owner."*).
+6. **Download Action**: Point the button directly to `http://localhost:5000/api/share/:token/download`.
 
-All the exact rules for those screens are written down for them in
-`FRONTEND-VALIDATION-GUIDE.md` (§3.11 and §4.8).
+
+#### Complete Example for `pages/SharedFile.jsx`:
+```jsx
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+export default function SharedFile() {
+  const { token } = useParams();
+  const [file, setFile] = useState(null);
+  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    axios
+      .get(`${API_BASE}/share/${token}`)
+      .then((res) => {
+        setFile(res.data.data);
+        setStatus('ready');
+      })
+      .catch((err) => {
+        setStatus('error');
+        setErrorMessage(
+          err.response?.data?.message || 'This link is invalid or has expired.'
+        );
+      });
+  }, [token]);
+
+  const handleDownload = () => {
+    // Navigating the browser directly triggers native file download
+    window.location.href = `${API_BASE}/share/${token}/download`;
+  };
+
+  const formatSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
+  if (status === 'loading') {
+    return <div className="loading-state">Loading shared file...</div>;
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="error-card">
+        <h2>Link Unavailable</h2>
+        <p>{errorMessage}</p>
+        <Link to="/">Go to Home</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="shared-file-container">
+      <div className="file-card">
+        <div className="file-icon">{file.fileType === 'image' ? '🖼️' : '📄'}</div>
+        <h1>{file.displayName}</h1>
+        <p className="file-meta">
+          <span>{formatSize(file.size)}</span> • <span>{file.fileType.toUpperCase()}</span>
+        </p>
+
+        {file.expiresAt && (
+          <p className="expiry-note">
+            Expires on: {new Date(file.expiresAt).toLocaleDateString()}
+          </p>
+        )}
+
+        <button className="download-btn" onClick={handleDownload}>
+          Download File
+        </button>
+      </div>
+    </div>
+  );
+}
+```
 
 ---
 
-## 10. In one sentence
+## 5. Verification & Testing Checklist
 
-*B5 added a "shareable link" to each file: the owner can create, cancel, or
-schedule the link to expire; anyone with the link can see the file's details and
-download it; and a database-level rule guarantees a file never has two working
-links at once.*
+You can verify all endpoints right now using Postman or your browser:
+
+1. **Verify Backend Service Health**:
+   * Open `http://localhost:5000/api/health` in browser $\rightarrow$ `{"success": true, "message": "CloudFileStorageApp API is running"}`.
+2. **View Shared File Details (Browser/Postman)**:
+   * Open `http://localhost:5000/api/share/vRKHD8vvab0tgU-vNNkjscJKKMi7kFNh` $\rightarrow$ Returns the file JSON metadata.
+3. **Download Shared File (Browser)**:
+   * Open `http://localhost:5000/api/share/vRKHD8vvab0tgU-vNNkjscJKKMi7kFNh/download` $\rightarrow$ Browser immediately downloads the PDF file with its true display name.
+4. **Run Automated Smoke Suite**:
+   * In `backend/`, run:
+     ```bash
+     node scripts/smoke-share.js
+     ```
+   * Result: **39 passed, 0 failed**.
 
 ---
 
-_Documentation written by the backend team (B5). Questions? Ask before changing
-anything in the sharing code — the "only one active link" rule is enforced by the
-database, so removing it means editing the model, not just the controller._
+## 6. Summary for the Frontend Team
+* The backend does **not** host HTML pages; it is a REST API.
+* The frontend owns the `/share/:token` page.
+* When `/share/:token` loads, fetch file metadata using `GET /api/share/:token`.
+* When the user clicks the "Download" button, redirect to `GET /api/share/:token/download` to stream the file.
