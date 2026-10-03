@@ -1,4 +1,5 @@
 const File = require('../models/File');
+const Folder = require('../models/Folder');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
