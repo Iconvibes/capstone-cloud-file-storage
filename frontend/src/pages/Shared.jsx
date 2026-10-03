@@ -1,14 +1,20 @@
-import { useNavigate } from "react-router-dom";
-import { Link2, Users } from "lucide-react";
+import { useEffect } from "react";
+import { Link2 } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
-import { Avatar, EmptyState, FileSkeletonRows } from "../components/ui.jsx";
+import { EmptyState, FileSkeletonRows, IconButton } from "../components/ui.jsx";
 import { FileIcon } from "../components/FileIcon.jsx";
 import { formatBytes, formatDate } from "../components/hooks.js";
 import { useLibrary } from "../context/LibraryContext.jsx";
+import { sharedFileUrl } from "../services/api.js";
 
+// Lists the signed-in user's own active share links, with copy and quick
+// open. Revoking lives in the Share modal (per file).
 export default function Shared() {
-  const navigate = useNavigate();
-  const { loading, error, retry, sharedWithMe } = useLibrary();
+  const { loading, error, retry, sharedLinks, loadSharedLinks } = useLibrary();
+
+  useEffect(() => {
+    loadSharedLinks();
+  }, [loadSharedLinks]);
 
   if (error) {
     return (
@@ -32,47 +38,42 @@ export default function Shared() {
       <TopBar title="" />
       <div className="page-pad">
         <header className="page-head">
-          <h1>Shared with you</h1>
-          <p>Files other people have sent into your workspace.</p>
+          <h1>Shared</h1>
+          <p>Links you've created — anyone with one can view and download the file.</p>
         </header>
         {loading ? (
           <FileSkeletonRows rows={4} />
-        ) : sharedWithMe.length === 0 ? (
+        ) : sharedLinks.length === 0 ? (
           <EmptyState
-            icon={<Users size={22} />}
-            title="Nothing shared with you yet"
-            body="When someone shares a file with your email, it appears here."
+            icon={<Link2 size={22} />}
+            title="No active share links"
+            body="Open a file's Share action to create a link you can send to anyone."
           />
         ) : (
           <div className="lib-list">
-            {sharedWithMe.map((item) => (
-              <div className="file-row" key={item.id}>
-                <button
-                  type="button"
-                  className="file-row-main"
-                  onClick={() => navigate(`/share/${item.fileId ?? item.id}`)}
-                >
-                  <FileIcon kind={item.kind} name={item.name} />
-                  <span className="file-row-name">
-                    <b>{item.name}</b>
-                    <small>
-                      {formatBytes(item.size)} · {formatDate(item.at)}
-                    </small>
-                  </span>
-                </button>
-                <div className="file-row-side">
-                  <span className="shared-from">
-                    <Avatar name={item.from} size="xs" />
-                    <span>
-                      {item.from} · {item.permission === "edit" ? "Can edit" : "Can view"}
+            {sharedLinks.map((link) => {
+              const file = link.file ?? {};
+              const expired = link.expiresAt && new Date(link.expiresAt).getTime() <= Date.now();
+              return (
+                <div className="file-row" key={link._id}>
+                  <a className="file-row-main" href={sharedFileUrl(link.token)} target="_blank" rel="noreferrer">
+                    <FileIcon kind={file.fileType === "image" ? "image" : "default"} name={file.displayName} />
+                    <span className="file-row-name">
+                      <b>{file.displayName}</b>
+                      <small>
+                        {formatBytes(file.size)} · Created {formatDate(link.createdAt)}
+                        {link.expiresAt ? (expired ? " · Expired" : ` · Expires ${formatDate(link.expiresAt)}`) : " · Never expires"}
+                      </small>
                     </span>
-                  </span>
-                  <span className="chip chip-shared" title="Shared with you">
-                    <Link2 size={13} aria-hidden="true" />
-                  </span>
+                  </a>
+                  <div className="file-row-side">
+                    <span className="chip chip-shared" title="Active share link">
+                      <Link2 size={13} aria-hidden="true" />
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

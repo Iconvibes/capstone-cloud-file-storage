@@ -1,1 +1,20 @@
+# Local tooling
 /.freebuff/
+
+# Dependencies
+node_modules/
+
+# Environment files (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+
+# Logs
+npm-debug.log*
+*.log
+
+# Local-only deployment notes (kept on this machine, not in the repo)
+DEPLOYMENT.md

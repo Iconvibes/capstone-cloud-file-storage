@@ -138,7 +138,15 @@ const downloadFile = async (req, res, next) => {
       "Content-Type": file.mimeType || upstream.headers.get("content-type") || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${asciiFilename || "download"}"; filename*=UTF-8''${encodedFilename}`,
     };
+    // Node's fetch transparently decompresses gzip/br upstream responses, so
+    // forwarding the upstream content-length would advertise the COMPRESSED
+    // size while the decompressed bytes are piped — which truncates the
+    // download (curl exits with "transfer closed"). Only forward it when the
+    // payload travels unmodified.
+    const contentEncoding = (upstream.headers.get("content-encoding") || "identity").toLowerCase();
+    const isIdentityEncoding = contentEncoding === "identity";
     for (const h of ["content-length", "content-range", "accept-ranges"]) {
+      if (h === "content-length" && !isIdentityEncoding) continue;
       const value = upstream.headers.get(h);
       if (value) headers[h] = value;
     }
@@ -162,7 +170,4 @@ const downloadFile = async (req, res, next) => {
   }
 };
 
-// NOTE: deleteFile is owned by another teammate's task — not part of B3.
-const deleteFile = async (req, res) => res.json({ success: true, message: "Delete endpoint placeholder" });
-
-module.exports = { listFiles, getFile, downloadFile, deleteFile };
+module.exports = { listFiles, getFile, downloadFile };

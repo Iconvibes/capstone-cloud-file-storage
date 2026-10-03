@@ -1,18 +1,15 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { CloudUpload, FileWarning, CheckCircle2, X } from "lucide-react";
 import { Button, Modal } from "./ui.jsx";
 import { FileIcon } from "./FileIcon.jsx";
 import { formatBytes } from "./hooks.js";
-import { useLibrary } from "../context/LibraryContext.jsx";
-import { kindFromName } from "../services/mockApi.js";
+import { useLibrary, kindOf } from "../context/LibraryContext.jsx";
 
 export default function UploadModal({ open, onClose, folderId = null }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [pending, setPending] = useState([]);
   const { startUpload, uploads, clearFinishedUploads, cancelUpload } = useLibrary();
-  const navigate = useNavigate();
 
   const activeUploads = uploads.filter((u) => u.status === "uploading");
   const finished = uploads.filter((u) => u.status !== "uploading");
@@ -22,7 +19,7 @@ export default function UploadModal({ open, onClose, folderId = null }) {
       const next = [...current];
       [...fileList].forEach((file) => {
         if (!next.some((entry) => entry.name === file.name && entry.size === file.size)) {
-          next.push({ name: file.name, size: file.size, kind: kindFromName(file.name) });
+          next.push(file); // keep the real File objects — they carry the bytes
         }
       });
       return next;
@@ -38,17 +35,14 @@ export default function UploadModal({ open, onClose, folderId = null }) {
 
   const begin = () => {
     if (!pending.length) return;
-    // The real integration passes File objects; the mock layer only needs name/size.
-    const map = new Map(pending.map((entry) => [entry.name, entry.size]));
-    const fakeFileList = [...map].map(([name, size]) => ({ name, size }));
-    startUpload(fakeFileList, folderId);
+    startUpload(pending, folderId);
     setPending([]);
   };
 
   const queueRows = (list) =>
     list.map((entry) => (
       <div className="up-row" key={entry.name}>
-        <FileIcon kind={entry.kind} name={entry.name} />
+        <FileIcon kind={kindOf({ mimeType: entry.type })} name={entry.name} />
         <div className="up-row-main">
           <b>{entry.name}</b>
           <small>{formatBytes(entry.size)}</small>
@@ -85,24 +79,27 @@ export default function UploadModal({ open, onClose, folderId = null }) {
         tabIndex={0}
         onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && inputRef.current?.click()}
       >
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          hidden
-          onChange={choose}
-          aria-label="Choose files to upload"
-        />
+        <input ref={inputRef} type="file" multiple hidden onChange={choose} aria-label="Choose files to upload" />
         <span className="dropzone-ic" aria-hidden="true">
           <CloudUpload size={24} />
         </span>
         <b>Drop files here</b>
-        <small>or tap to browse — documents, photos, video, anything you need close.</small>
+        <small>or tap to browse — documents, photos, archives, anything you need close.</small>
       </div>
 
       {pending.length ? (
         <>
-          <div className="up-queue">{queueRows(pending)}</div>
+          <div className="up-queue">
+            {pending.map((entry) => (
+              <div className="up-row" key={`${entry.name}-${entry.size}`}>
+                <FileIcon kind={kindOf({ mimeType: entry.type })} name={entry.name} />
+                <div className="up-row-main">
+                  <b>{entry.name}</b>
+                  <small>{formatBytes(entry.size)}</small>
+                </div>
+              </div>
+            ))}
+          </div>
           <div className="modal-actions">
             <Button variant="ghost" onClick={() => setPending([])}>
               Clear
@@ -118,7 +115,7 @@ export default function UploadModal({ open, onClose, folderId = null }) {
           {queueRows(activeUploads)}
           {finished.map((entry) => (
             <div className="up-row" key={entry.id}>
-              <FileIcon kind={kindFromName(entry.name)} name={entry.name} />
+              <FileIcon kind={entry.kind} name={entry.name} />
               <div className="up-row-main">
                 <b>{entry.name}</b>
                 <small>{formatBytes(entry.size)}</small>

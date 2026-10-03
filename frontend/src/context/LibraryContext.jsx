@@ -1,14 +1,36 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import * as mockApi from "../services/mockApi";
+import * as cloud from "../services/api.js";
 
 const LibraryContext = createContext(null);
 
-const sorters = {
-  name: (a, b) => a.name.localeCompare(b.name),
-  newest: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
-  oldest: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
-  size: (a, b) => b.size - a.size,
-};
+// Mirror of the backend's fileType buckets (uploadController.getFileType).
+const MIME_KINDS = [
+  [/^image\//, "image"],
+  [/^application\/pdf/, "pdf"],
+  [/word|officedocument\.wordprocessingml/, "doc"],
+  [/excel|spreadsheetml/, "sheet"],
+  [/powerpoint|presentationml/, "slides"],
+  [/^text\/plain/, "doc"],
+  [/^application\/zip$/, "archive"],
+];
+
+export function kindOf(file) {
+  const mime = file?.mimeType || "";
+  for (const [pattern, kind] of MIME_KINDS) {
+    if (pattern.test(mime)) return kind;
+  }
+  return "default";
+}
+
+// The workspace keeps every file of the signed-in user in memory and filters
+// it per screen; a persisted `starred` flag marks quick-access items.
+function withKind(file, starredIds) {
+  return {
+    ...file,
+    kind: kindOf(file),
+    starred: starredIds.has(file._id || file.id),
+  };
+}
 
 export function LibraryProvider({ children }) {
   const [library, setLibrary] = useState(null);
@@ -18,7 +40,12 @@ export function LibraryProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [uploads, setUploads] = useState([]);
   const [uploadOpen, setUploadOpen] = useState(false);
+  // Folder the next upload should land in (null = library root).
+  const [uploadFolderId, setUploadFolderId] = useState(null);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
+  // Own state (not part of `library`): the Shared page can fetch links while
+  // the library payload is still loading or absent.
+  const [sharedLinks, setSharedLinks] = useState([]);
 
   const dismissToast = useCallback((id) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
@@ -33,18 +60,56 @@ export function LibraryProvider({ children }) {
     [dismissToast],
   );
 
+  // Reads the per-user starred file ids saved locally (UI preference only).
+  const readStars = useCallback(() => {
+    try {
+      const raw = localStorage.getItem("lumen-vault-stars");
+      return new Set(Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : []);
+    } catch {
+      return new Set();
+    }
+  }, []);
+
+  const writeStars = useCallback((ids) => {
+    try {
+      localStorage.setItem("lumen-vault-stars", JSON.stringify([...ids]));
+    } catch {
+      /* storage unavailable — stars live in memory for this session */
+    }
+  }, []);
+
+  // One load pulls everything the workspace needs: all files (list endpoint
+  // pages 50 at a time — fetchAllFiles walks the pages) plus all folders.
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await mockApi.getLibrary();
-      setLibrary(data);
+      const [files, foldersData] = await Promise.all([cloud.fetchAllFiles(), cloud.fetchFolders()]);
+      const folders = foldersData?.folders ?? [];
+      const stars = readStars();
+      setLibrary({
+        files: files.map((file) => withKind(file, stars)),
+        folders: folders.map((folder) => ({ ...folder, fileCount: 0 })),
+      });
+      // Second pass: count the files inside each folder.
+      setLibrary((state) => {
+        if (!state) return state;
+        const counts = new Map();
+        state.files.forEach((file) => {
+          const key = file.folder?._id ?? file.folder ?? null;
+          if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+        });
+        return {
+          ...state,
+          folders: state.folders.map((folder) => ({ ...folder, fileCount: counts.get(folder._id) ?? 0 })),
+        };
+      });
     } catch (cause) {
-      setError(cause.message || "Something went wrong.");
+      setError(cloud.messageFromError(cause, "Couldn't load your library."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [readStars]);
 
   useEffect(() => {
     load();
@@ -55,214 +120,246 @@ export function LibraryProvider({ children }) {
     return library;
   }, [library]);
 
+  const fileId = (file) => file?._id ?? file?.id ?? null;
+
   const toggleStar = useCallback(
-    async (fileId) => {
-      const current = requireLibrary();
-      const target = current.files.find((file) => file.id === fileId);
-      setLibrary((state) => ({
-        ...state,
-        files: state.files.map((file) => (file.id === fileId ? { ...file, starred: !file.starred } : file)),
-      }));
-      try {
-        await mockApi.toggleStar(fileId);
-      } catch {
-        setLibrary((state) => ({
-          ...state,
-          files: state.files.map((file) => (file.id === fileId ? { ...file, starred: !file.starred } : file)),
-        }));
-        pushToast({ tone: "error", message: "Couldn't update that file. Try again." });
-      }
-      return target ? !target.starred : false;
+    async (id) => {
+      const stars = readStars();
+      if (stars.has(id)) stars.delete(id);
+      else stars.add(id);
+      writeStars(stars);
+      setLibrary((state) =>
+        state
+          ? { ...state, files: state.files.map((file) => (fileId(file) === id ? { ...file, starred: stars.has(id) } : file)) }
+          : state,
+      );
+      return stars.has(id);
     },
-    [pushToast, requireLibrary],
+    [readStars, writeStars],
   );
 
   const renameFile = useCallback(
-    async (fileId, name) => {
+    async (id, name) => {
       try {
-        const updated = await mockApi.renameFile(fileId, name);
-        setLibrary((state) => ({
-          ...state,
-          files: state.files.map((file) => (file.id === fileId ? { ...file, name: updated.name, updatedAt: updated.updatedAt } : file)),
-        }));
+        const updated = await cloud.renameFile(id, name);
+        setLibrary((state) =>
+          state
+            ? {
+                ...state,
+                files: state.files.map((file) =>
+                  fileId(file) === id ? { ...file, displayName: updated.displayName, updatedAt: updated.updatedAt ?? file.updatedAt } : file,
+                ),
+              }
+            : state,
+        );
         pushToast({ message: "Renamed" });
-      } catch {
-        pushToast({ tone: "error", message: "Rename failed. Try again." });
-      }
-    },
-    [pushToast],
-  );
-
-  const trashFiles = useCallback(
-    async (fileIds) => {
-      try {
-        await Promise.all(fileIds.map((id) => mockApi.trashFile(id)));
-        setLibrary((state) => ({
-          ...state,
-          files: state.files.filter((file) => !fileIds.includes(file.id)),
-          trash: [
-            ...fileIds
-              .map((id) => state.files.find((file) => file.id === id))
-              .filter(Boolean)
-              .map((file) => ({
-                id: file.id,
-                name: file.name,
-                kind: file.kind,
-                size: file.size,
-                deletedAt: new Date().toISOString(),
-                restoreTo: state.folders.find((folder) => folder.id === file.folderId)?.name ?? "My Files",
-              })),
-            ...state.trash,
-          ],
-        }));
-        pushToast({ message: fileIds.length > 1 ? `${fileIds.length} items moved to trash` : "Moved to trash" });
-      } catch {
-        pushToast({ tone: "error", message: "Couldn't move to trash. Try again." });
-      }
-    },
-    [pushToast],
-  );
-
-  const restoreFiles = useCallback(
-    async (ids) => {
-      try {
-        await Promise.all(ids.map((id) => mockApi.restoreFile(id)));
-        setLibrary((state) => {
-          const restored = state.trash.filter((item) => ids.includes(item.id));
-          return {
-            ...state,
-            trash: state.trash.filter((item) => !ids.includes(item.id)),
-            files: [
-              ...state.files,
-              ...restored.map((item) => ({
-                id: item.id,
-                name: item.name,
-                kind: item.kind,
-                size: item.size,
-                folderId: null,
-                updatedAt: new Date().toISOString(),
-                starred: false,
-                shared: false,
-              })),
-            ],
-          };
-        });
-        pushToast({ message: ids.length > 1 ? "Items restored" : "Item restored" });
-      } catch {
-        pushToast({ tone: "error", message: "Restore failed. Try again." });
-      }
-    },
-    [pushToast],
-  );
-
-  const deleteForever = useCallback(
-    async (ids) => {
-      try {
-        await Promise.all(ids.map((id) => mockApi.deleteForever(id)));
-        setLibrary((state) => ({ ...state, trash: state.trash.filter((item) => !ids.includes(item.id)) }));
-        pushToast({ message: ids.length > 1 ? "Items deleted" : "Item deleted" });
-      } catch {
-        pushToast({ tone: "error", message: "Delete failed. Try again." });
-      }
-    },
-    [pushToast],
-  );
-
-  const emptyTrash = useCallback(async () => {
-    try {
-      await mockApi.emptyTrash();
-      setLibrary((state) => ({ ...state, trash: [] }));
-      pushToast({ message: "Trash is empty" });
-    } catch {
-      pushToast({ tone: "error", message: "Couldn't empty trash. Try again." });
-    }
-  }, [pushToast]);
-
-  const createFolder = useCallback(
-    async (name, parentId = null) => {
-      try {
-        const folder = await mockApi.createFolder(name, parentId);
-        setLibrary((state) => ({ ...state, folders: [...state.folders, folder] }));
-        pushToast({ message: `Folder “${name}” created` });
-        return folder;
-      } catch {
-        pushToast({ tone: "error", message: "Couldn't create folder. Try again." });
+        return updated;
+      } catch (cause) {
+        pushToast({ tone: "error", message: cloud.messageFromError(cause, "Rename failed. Try again.") });
         return null;
       }
     },
     [pushToast],
   );
 
+  const trashFiles = useCallback(
+    async (ids) => {
+      let deleted = 0;
+      let lastError = null;
+      for (const id of ids) {
+        try {
+          await cloud.deleteFile(id);
+          deleted += 1;
+        } catch (cause) {
+          lastError = cause;
+        }
+      }
+      if (deleted) {
+      setLibrary((state) => {
+        if (!state) return state;
+        return {
+          ...state,
+          files: state.files.filter((file) => !ids.includes(fileId(file))),
+        };
+      });
+      setSharedLinks((current) => current.filter((link) => (link.file?._id ?? link.file) && !ids.includes(link.file._id)));
+        pushToast({ message: deleted > 1 ? `${deleted} items deleted` : "Item deleted" });
+      }
+      if (lastError) {
+        pushToast({ tone: "error", message: cloud.messageFromError(lastError, "Couldn't delete some items. Try again.") });
+      }
+      return deleted;
+    },
+    [pushToast],
+  );
+
+  const createFolder = useCallback(
+    async (name) => {
+      try {
+        const folder = await cloud.createFolder(name);
+        setLibrary((state) => (state ? { ...state, folders: [...state.folders, { ...folder, fileCount: 0 }] } : state));
+        pushToast({ message: `Folder “${name}” created` });
+        return folder;
+      } catch (cause) {
+        pushToast({ tone: "error", message: cloud.messageFromError(cause, "Couldn't create folder. Try again.") });
+        return null;
+      }
+    },
+    [pushToast],
+  );
+
+  const renameFolder = useCallback(
+    async (id, name) => {
+      try {
+        const updated = await cloud.renameFolder(id, name);
+        setLibrary((state) =>
+          state
+            ? {
+                ...state,
+                folders: state.folders.map((folder) => (folder._id === id ? { ...folder, name: updated.name } : folder)),
+              }
+            : state,
+        );
+        pushToast({ message: "Folder renamed" });
+        return updated;
+      } catch (cause) {
+        pushToast({ tone: "error", message: cloud.messageFromError(cause, "Couldn't rename the folder. Try again.") });
+        return null;
+      }
+    },
+    [pushToast],
+  );
+
+  const removeFolder = useCallback(
+    async (id) => {
+      try {
+        await cloud.deleteFolder(id);
+        setLibrary((state) => {
+          if (!state) return state;
+          const detached = new Set([id]); // deleted folder + its subfolders move up
+          let changed = true;
+          while (changed) {
+            changed = false;
+            state.folders.forEach((folder) => {
+              const parent = folder.parentId ?? folder.parent?._id ?? folder.parent ?? null;
+              if (parent && detached.has(parent) && !detached.has(folder._id)) {
+                detached.add(folder._id);
+                changed = true;
+              }
+            });
+          }
+          return {
+            ...state,
+            folders: state.folders.filter((folder) => !detached.has(folder._id)),
+          };
+        });
+        pushToast({ message: "Folder deleted" });
+        return true;
+      } catch (cause) {
+        pushToast({ tone: "error", message: cloud.messageFromError(cause, "Couldn't delete the folder. Try again.") });
+        return false;
+      }
+    },
+    [pushToast],
+  );
+
   const startUpload = useCallback(
-    (files, folderId = null) => {
-      const queued = [...files].map((file) => ({
+    (fileList, folderId = null) => {
+      const files = [...fileList];
+      if (!files.length) return;
+
+      const queued = files.map((file) => ({
         id: `q-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
         name: file.name,
         size: file.size,
+        kind: kindOf({ mimeType: file.type }),
         progress: 0,
         status: "uploading",
+        controller: null,
       }));
       setUploads((current) => [...current, ...queued]);
 
-      queued.forEach((item, index) => {
-        mockApi
+      files.forEach((file, index) => {
+        const item = queued[index];
+        const controller = new AbortController();
+        item.controller = controller;
+        cloud
           .uploadFile({
-            name: item.name,
-            size: item.size,
+            file,
             folderId,
+            signal: controller.signal,
             onProgress: (progress) =>
               setUploads((current) => current.map((entry) => (entry.id === item.id ? { ...entry, progress } : entry))),
           })
           .then((record) => {
-            setLibrary((state) =>
-              state
-                ? {
-                    ...state,
-                    files: [record, ...state.files],
-                    recentIds: [record.id, ...state.recentIds],
-                    storage: {
-                      ...state.storage,
-                      usedGb: Math.round((state.storage.usedGb + record.size / 1024 ** 3) * 10) / 10,
-                      usedLabel: `${Math.round((state.storage.usedGb + record.size / 1024 ** 3) * 10) / 10} GB`,
-                    },
-                  }
-                : state,
-            );
+            setLibrary((state) => {
+              if (!state) return state;
+              const stars = readStars();
+              const next = { ...state, files: [withKind(record, stars), ...state.files] };
+              if (folderId) {
+                next.folders = next.folders.map((folder) =>
+                  folder._id === folderId ? { ...folder, fileCount: (folder.fileCount ?? 0) + 1 } : folder,
+                );
+              }
+              return next;
+            });
             setUploads((current) => current.map((entry) => (entry.id === item.id ? { ...entry, status: "done", progress: 100 } : entry)));
           })
-          .catch(() => {
-            setUploads((current) => current.map((entry) => (entry.id === item.id ? { ...entry, status: "failed" } : entry)));
-            pushToast({ tone: "error", message: `${item.name} failed to upload` });
+          .catch((cause) => {
+            const cancelled = cause?.code === "ERR_CANCELED" || cause?.name === "CanceledError";
+            setUploads((current) => current.map((entry) => (entry.id === item.id ? { ...entry, status: cancelled ? "cancelled" : "failed" } : entry)));
+            if (!cancelled) {
+              pushToast({ tone: "error", message: cloud.messageFromError(cause, `${item.name} failed to upload`) });
+            }
           });
       });
     },
-    [pushToast],
+    [pushToast, readStars],
   );
+
+  const cancelUpload = useCallback((id) => {
+    setUploads((current) => {
+      const entry = current.find((item) => item.id === id);
+      entry?.controller?.abort();
+      return current.map((item) => (item.id === id ? { ...item, status: "cancelled" } : item));
+    });
+  }, []);
 
   const clearFinishedUploads = useCallback(() => {
     setUploads((current) => current.filter((entry) => entry.status === "uploading"));
   }, []);
 
-  const cancelUpload = useCallback((id) => {
-    setUploads((current) => current.map((entry) => (entry.id === id ? { ...entry, status: "cancelled" } : entry)));
+  const shareFile = useCallback(async (id, options) => {
+    return cloud.createShareLink(id, options?.expiresAt ?? null);
   }, []);
 
-  const shareFile = useCallback(
-    async (fileId, options) => {
-      const result = await mockApi.shareFile(fileId, options);
-      if (result && library) {
-        setLibrary((state) => ({
-          ...state,
-          files: state.files.map((file) => (file.id === fileId ? { ...file, shared: true } : file)),
-        }));
+  const revokeShare = useCallback(
+    async (id) => {
+      try {
+        await cloud.revokeShareLink(id);
+        setSharedLinks((current) => current.filter((link) => (link.file?._id ?? link.file) !== id));
+        return true;
+      } catch (cause) {
+        pushToast({ tone: "error", message: cloud.messageFromError(cause, "Couldn't revoke the link. Try again.") });
+        return false;
       }
-      return result;
     },
-    [library],
+    [pushToast],
   );
 
+  const loadSharedLinks = useCallback(async () => {
+    try {
+      const data = await cloud.fetchShareLinks();
+      setSharedLinks(data?.links ?? []);
+      return data?.links ?? [];
+    } catch (cause) {
+      pushToast({ tone: "error", message: cloud.messageFromError(cause, "Couldn't load your shared links.") });
+      return [];
+    }
+  }, [pushToast]);
+
   const value = useMemo(() => {
-    const base = library ?? { folders: [], files: [], sharedWithMe: [], trash: [], activity: [], recentIds: [], storage: null, user: null };
+    const base = library ?? { files: [], folders: [] };
     const sortedFiles = [...base.files].sort(sorters[sort] ?? sorters.newest);
     return {
       loading,
@@ -281,34 +378,39 @@ export function LibraryProvider({ children }) {
       toggleStar,
       renameFile,
       trashFiles,
-      restoreFiles,
-      deleteForever,
-      emptyTrash,
       createFolder,
+      renameFolder,
+      removeFolder,
       shareFile,
+      revokeShare,
+      sharedLinks,
+      loadSharedLinks,
       uploadOpen,
       setUploadOpen,
+      uploadFolderId,
+      setUploadFolderId,
       newFolderOpen,
       setNewFolderOpen,
       folders: base.folders,
       files: sortedFiles,
       rawFiles: base.files,
-      sharedWithMe: base.sharedWithMe,
-      trash: base.trash,
-      activity: base.activity,
-      recentIds: base.recentIds,
-      storage: base.storage,
-      user: base.user,
     };
   }, [
     library, loading, error, load, sort, toasts, pushToast, dismissToast, uploads,
     startUpload, clearFinishedUploads, cancelUpload, requireLibrary, toggleStar,
-    renameFile, trashFiles, restoreFiles, deleteForever, emptyTrash, createFolder,
-    shareFile, uploadOpen, newFolderOpen,
+    renameFile, trashFiles, createFolder, renameFolder, removeFolder, shareFile,
+    revokeShare, sharedLinks, loadSharedLinks, uploadOpen, uploadFolderId, newFolderOpen,
   ]);
 
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>;
 }
+
+const sorters = {
+  name: (a, b) => (a.displayName ?? "").localeCompare(b.displayName ?? ""),
+  newest: (a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0),
+  oldest: (a, b) => new Date(a.createdAt ?? 0) - new Date(b.createdAt ?? 0),
+  size: (a, b) => (b.size ?? 0) - (a.size ?? 0),
+};
 
 export function useLibrary() {
   const context = useContext(LibraryContext);
@@ -317,4 +419,3 @@ export function useLibrary() {
 }
 
 export default LibraryContext;
-

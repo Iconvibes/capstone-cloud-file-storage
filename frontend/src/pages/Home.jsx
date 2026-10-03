@@ -1,27 +1,21 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Clock3, FolderPlus, Folder as FolderIcon, Search, Share2, Star, Upload } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import StorageCard from "../components/StorageCard.jsx";
 import { FileIcon } from "../components/FileIcon.jsx";
-import { FileSkeletonRows } from "../components/ui.jsx";
-import { EmptyState } from "../components/ui.jsx";
+import { FileSkeletonRows, EmptyState } from "../components/ui.jsx";
 import { formatBytes, formatDate } from "../components/hooks.js";
 import { useLibrary } from "../context/LibraryContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { loading, error, retry, files, folders, recentIds, activity, user, setUploadOpen, setNewFolderOpen } =
-    useLibrary();
+  const { loading, error, retry, files, folders, setUploadOpen, setNewFolderOpen } = useLibrary();
+  const { user } = useAuth();
 
-  const recentFiles = useMemo(
-    () =>
-      recentIds
-        .map((id) => files.find((file) => file.id === id))
-        .filter(Boolean)
-        .slice(0, 6),
-    [files, recentIds],
-  );
+  // Newest uploads first — the backend already returns files newest-first.
+  const recentFiles = useMemo(() => files.slice(0, 6), [files]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -105,11 +99,11 @@ export default function Home() {
           ) : recentFiles.length ? (
             <div className="recent-strip">
               {recentFiles.map((file) => (
-                <button type="button" className="recent-tile" key={file.id} onClick={() => navigate(`/app/preview/${file.id}`)}>
-                  <FileIcon kind={file.kind} name={file.name} thumb={file.thumb} />
-                  <b>{file.name}</b>
+                <button type="button" className="recent-tile" key={file._id} onClick={() => navigate(`/app/preview/${file._id}`)}>
+                  <FileIcon kind={file.kind} name={file.displayName} />
+                  <b>{file.displayName}</b>
                   <small>
-                    {formatBytes(file.size)} · {formatDate(file.updatedAt)}
+                    {formatBytes(file.size)} · {formatDate(file.updatedAt ?? file.createdAt)}
                   </small>
                 </button>
               ))}
@@ -118,7 +112,7 @@ export default function Home() {
             <EmptyState
               icon={<Clock3 size={22} />}
               title="Nothing recent yet"
-              body="Files you open or upload will show up here."
+              body="Files you upload will show up here."
             />
           )}
         </section>
@@ -133,42 +127,18 @@ export default function Home() {
           ) : (
             <div className="home-folders">
               {folders.slice(0, 4).map((folder) => (
-                <Link to={`/app/files/folder/${folder.id}`} className="home-folder" key={folder.id}>
+                <Link to={`/app/files/folder/${folder._id}`} className="home-folder" key={folder._id}>
                   <span className="home-folder-ic" aria-hidden="true">
                     <FolderIcon size={18} />
                   </span>
                   <span className="home-folder-meta">
                     <b>{folder.name}</b>
-                    <small>{folder.fileCount} items</small>
+                    <small>{folder.fileCount ?? 0} items</small>
                   </span>
                   <ChevronRight size={16} aria-hidden="true" />
                 </Link>
               ))}
             </div>
-          )}
-        </section>
-
-        <section className="home-sec">
-          <div className="home-sec-head">
-            <h2>Activity</h2>
-          </div>
-          {loading ? (
-            <FileSkeletonRows rows={2} />
-          ) : (
-            <ul className="activity">
-              {activity.slice(0, 4).map((item) => (
-                <li key={item.id}>
-                  <span className={`activity-ic activity-${item.type}`} aria-hidden="true">
-                    {item.type === "upload" ? "↑" : item.type === "share" ? <Share2 size={13} /> : item.type === "star" ? <Star size={13} /> : item.type === "rename" ? "✎" : "↺"}
-                  </span>
-                  <p>
-                    <b>{item.actor}</b> {item.type === "upload" ? "uploaded" : item.type === "share" ? "shared" : item.type === "star" ? "starred" : item.type === "rename" ? "renamed" : "moved to trash"}{" "}
-                    {item.target}
-                  </p>
-                  <time>{formatDate(item.at)}</time>
-                </li>
-              ))}
-            </ul>
           )}
         </section>
       </div>

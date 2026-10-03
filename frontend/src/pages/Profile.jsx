@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, CircleHelp, CloudUpload, KeyRound, LogOut, Moon, ShieldCheck } from "lucide-react";
+import { ChevronRight, CircleHelp, KeyRound, LogOut, Moon, ShieldCheck } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
-import StorageCard from "../components/StorageCard.jsx";
 import { Avatar, Button } from "../components/ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
@@ -9,7 +8,7 @@ import { useLibrary } from "../context/LibraryContext.jsx";
 export default function Profile() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { storage, pushToast } = useLibrary();
+  const { pushToast } = useLibrary();
 
   const signOut = () => {
     logout();
@@ -28,22 +27,14 @@ export default function Profile() {
           </div>
         </header>
 
-        <StorageCard />
-
         <section className="settings-group">
           <h2>Account</h2>
           <div className="settings-card">
-            <button type="button" className="settings-row" onClick={() => pushToast({ message: "Plan management is a demo here" })}>
-              <span className="settings-ic">
-                <CloudUpload size={17} />
-              </span>
-              <span className="settings-meta">
-                <b>Plan</b>
-                <small>{user?.plan ?? "Free"} — 100 GB storage</small>
-              </span>
-              <ChevronRight size={17} aria-hidden="true" />
-            </button>
-            <button type="button" className="settings-row" onClick={() => pushToast({ message: "Password change is a demo here" })}>
+            <button
+              type="button"
+              className="settings-row"
+              onClick={() => pushToast({ message: "Password changes aren't available yet" })}
+            >
               <span className="settings-ic">
                 <KeyRound size={17} />
               </span>
@@ -53,7 +44,11 @@ export default function Profile() {
               </span>
               <ChevronRight size={17} aria-hidden="true" />
             </button>
-            <button type="button" className="settings-row" onClick={() => pushToast({ message: "Shared link settings are a demo here" })}>
+            <button
+              type="button"
+              className="settings-row"
+              onClick={() => pushToast({ message: "Sharing defaults aren't available yet" })}
+            >
               <span className="settings-ic">
                 <ShieldCheck size={17} />
               </span>

@@ -1,50 +1,37 @@
-import { ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { Files } from "lucide-react";
 import { useLibrary } from "../context/LibraryContext.jsx";
+import { formatBytes } from "./hooks.js";
 
-// Storage usage card with a segmented usage bar. Demo data until the real
-// account API exists.
-export default function StorageCard({ compact = false }) {
-  const { storage } = useLibrary();
-  const navigate = useNavigate();
-  if (!storage) return null;
+// Library stats card: how many files you keep and how much space they take.
+// This product has no storage cap — no quota bar, no percentage used.
+export default function StorageCard() {
+  const { files, folders } = useLibrary();
 
-  const pct = Math.min(100, Math.round((storage.usedGb / storage.totalGb) * 100));
-  const remaining = Math.max(0, storage.totalGb - storage.usedGb);
+  const { count, totalSize } = useMemo(
+    () => ({
+      count: files.length,
+      totalSize: files.reduce((sum, file) => sum + (file.size ?? 0), 0),
+    }),
+    [files],
+  );
 
   return (
-    <section className={`storage-card ${compact ? "storage-card-compact" : ""}`.trim()} aria-label="Storage usage">
+    <section className="storage-card storage-card-compact" aria-label="Library stats">
       <div className="storage-card-top">
         <div>
-          <small>Storage used</small>
+          <small>Your library</small>
           <b>
-            {storage.usedLabel} <span>of {storage.totalLabel}</span>
+            {count} {count === 1 ? "file" : "files"} <span>· {formatBytes(totalSize)}</span>
           </b>
         </div>
-        <button type="button" className="storage-manage" onClick={() => navigate("/app/profile")}>
-          Manage <ChevronRight size={15} aria-hidden="true" />
-        </button>
-      </div>
-      <span className="storage-segbar" role="img" aria-label={`${pct}% of storage used`}>
-        {storage.breakdown.map((seg) => (
-          <i
-            key={seg.key}
-            className={`seg-${seg.key}`}
-            style={{ flexGrow: seg.gb, background: seg.color }}
-          />
-        ))}
-      </span>
-      <div className="storage-legend">
-        {storage.breakdown.map((seg) => (
-          <span key={seg.key}>
-            <i style={{ background: seg.color }} aria-hidden="true" />
-            {seg.label} · {seg.gb} GB
-          </span>
-        ))}
       </div>
       <p className="storage-note">
-        {remaining.toFixed(1)} GB available · demo data, not your real usage
+        Across {folders.length} {folders.length === 1 ? "folder" : "folders"} — no storage limit.
       </p>
+      <span className="sr-only">
+        <Files size={14} />
+      </span>
     </section>
   );
 }

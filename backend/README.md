@@ -43,11 +43,13 @@ Errors use `{ "success": false, "message": "...", "data": null }` and, for valid
 |---|---|---|---|
 | /api/folders | GET | Bearer token | List own folders |
 | /api/folders | POST | Bearer token | Create folder |
+| /api/folders/:id | PATCH | Bearer token | Rename folder (`name`, 1–100 chars) |
 | /api/folders/:id | DELETE | Bearer token | Delete folder |
 
 ## File sharing (B5)
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
+| /api/share/links | GET | Bearer token | List your own active share links (with file details) |
 | /api/files/:id/share | POST | Bearer token (owner) | Create a shareable link. One active link per file; repeat calls return the existing link. Body: optional `expiresAt` (ISO date in the future; omit / `null` / `""` = permanent) |
 | /api/files/:id/share | DELETE | Bearer token (owner) | Revoke the file's active share link(s) |
 | /api/share/:token | GET | No (public) | Get shared file's details (name, type, size — no owner / cloud info). `404` invalid/revoked, `410` expired |

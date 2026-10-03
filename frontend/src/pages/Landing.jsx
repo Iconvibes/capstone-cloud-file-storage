@@ -140,14 +140,14 @@ export default function Landing() {
               <Folder size={19} />
             </span>
             <h3>Folders that make sense</h3>
-            <p>Keep projects, clients and life in their own tidy spaces, nested as deep as you need.</p>
+            <p>Keep projects, clients and life in their own tidy spaces, so every file has an obvious home.</p>
           </Reveal>
           <Reveal className="feat">
             <span className="feat-ic">
               <Share2 size={19} />
             </span>
             <h3>Share on your terms</h3>
-            <p>Send a clean link, choose view or edit, and take access back whenever the work is done.</p>
+            <p>Send a clean link to a single file, and take access back whenever the work is done.</p>
           </Reveal>
           <Reveal className="feat">
             <span className="feat-ic">
@@ -160,8 +160,8 @@ export default function Landing() {
             <span className="feat-ic">
               <Gauge size={19} />
             </span>
-            <h3>Storage you can read</h3>
-            <p>A clear view of what is using space, so you are never surprised by a full account.</p>
+            <h3>Everything you have stored</h3>
+            <p>A live count of your files and the space they use, so you always know what you have.</p>
           </Reveal>
         </div>
       </section>
@@ -181,7 +181,7 @@ export default function Landing() {
                 "Private storage — nothing is public unless you share it",
                 "Links you can revoke at any time",
                 "Account protection with sign-in verification",
-                "Recovery options that keep you in charge",
+                "Passwords stored as one-way hashes, never in plain text",
               ].map((item) => (
                 <li key={item}>
                   <ShieldCheck size={16} aria-hidden="true" /> {item}
@@ -202,14 +202,14 @@ export default function Landing() {
                 <Link2 size={22} />
               </span>
               <b>Links you control</b>
-              <p>View or edit, per person, revocable in one tap.</p>
+              <p>One active link per file, revocable in one tap.</p>
             </div>
             <div className="sec-card">
               <span className="sec-card-ic">
                 <ShieldCheck size={22} />
               </span>
               <b>Protected sign-in</b>
-              <p>Verification and recovery that keep your account yours.</p>
+              <p>Hashed passwords and signed sessions that keep your account yours.</p>
             </div>
           </Reveal>
         </div>
@@ -294,17 +294,14 @@ export default function Landing() {
             <div className="preview-desk-body">
               <div className="preview-desk-side">
                 <b>Lumen Vault</b>
-                {["Home", "My Files", "Shared", "Starred", "Trash"].map((item, i) => (
+                {["Home", "My Files", "Shared", "Starred"].map((item, i) => (
                   <span key={item} className={i === 1 ? "is-active" : ""}>
                     {item}
                   </span>
                 ))}
                 <div className="preview-desk-storage">
-                  <span>Storage</span>
-                  <span className="bar">
-                    <i style={{ width: "38%" }} />
-                  </span>
-                  <small>38.4 GB of 100 GB</small>
+                  <span>Your library</span>
+                  <small>164 files · 12.6 GB</small>
                 </div>
               </div>
               <div className="preview-desk-main">
@@ -329,7 +326,7 @@ export default function Landing() {
       <section className="final-cta" id="cta">
         <Reveal className="final-cta-in">
           <h2>Put your files somewhere calm</h2>
-          <p>Set up takes about a minute. Your first 20 GB are free.</p>
+          <p>Set up takes about a minute. Free for personal use.</p>
           <div className="hero-actions center">
             <Link to="/register" className="btn btn-light btn-lg">
               Get started free <ArrowRight size={17} />

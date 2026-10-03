@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const File = require('../models/File');
 const Folder = require('../models/Folder');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
@@ -28,8 +29,12 @@ async function uploadFile(req, res) {
       if (!mongoose.Types.ObjectId.isValid(folderId)) {
         return errorResponse(res, 'Invalid folder', 400);
       }
-      // TODO: confirm with B4 — this should likely query the Folder model, not File
-      // const folder = await Folder.findOne({ _id: folderId, owner: req.user.id });
+      // The target folder must exist AND belong to the uploader — never
+      // allow files to be filed under someone else's folder.
+      const folder = await Folder.findOne({ _id: folderId, owner: req.user._id });
+      if (!folder) {
+        return errorResponse(res, 'Folder not found', 404);
+      }
     }
 
     const result = await uploadToCloudinary(req.file.buffer, {

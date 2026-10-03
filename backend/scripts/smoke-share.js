@@ -122,7 +122,8 @@ async function main() {
     check("create share -> 201", r.status === 201);
     const first = r.json && r.json.data;
     check("payload has token + shareUrl + isActive", !!first && !!first.token && !!first.shareUrl && first.isActive === true);
-    check("shareUrl built from CLIENT_URL", !!first && first.shareUrl === `http://localhost:3000/share/${first.token}`);
+    const clientBase = (process.env.CLIENT_URL || "").replace(/\/+$/, "");
+    check("shareUrl built from CLIENT_URL", !!first && first.shareUrl === `${clientBase}/share/${first.token}`);
     check("expiresAt persisted", !!first && !!first.expiresAt);
 
     r = await api(`/api/files/${file1}/share`, { method: "POST", token: u1.token, body: { expiresAt: future } });

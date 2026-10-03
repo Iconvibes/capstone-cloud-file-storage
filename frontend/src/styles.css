@@ -1,41 +1,58 @@
 /* ============================================================
    Lumen Vault — design system
-   Clean white surfaces, one cobalt accent, soft shadows,
-   large radii, mobile-first. Plain CSS, no framework.
+   Claymorphism: one soft clay surface, depth built from a
+   dual light/dark shadow pair, generous radii, cobalt accent.
+   Mobile-first. Plain CSS, no framework.
    ============================================================ */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
 
 :root {
-  /* color */
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --ink: #101828;
-  --ink-2: #475467;
-  --ink-3: #98a2b3;
-  --line: #eaecf0;
-  --line-strong: #d0d5dd;
+  /* clay surface — one base tone; depth comes from the shadow pairs below */
+  --bg: #e9edf4;
+  --surface: #e9edf4;
+  --surface-2: #e2e7f0;
+  --surface-3: #dce2ec;
+
+  /* text — softer than pure black so it sits in the clay */
+  --ink: #2c3346;
+  --ink-2: #5b6480;
+  --ink-3: #97a0b6;
+
+  /* hairlines become light-catching edges instead of grey rules */
+  --line: rgba(255, 255, 255, 0.62);
+  --line-strong: rgba(163, 177, 198, 0.5);
+
   --brand: #3b5bfd;
   --brand-deep: #2f49d1;
-  --brand-soft: #eef1ff;
+  --brand-soft: #e2e7fb;
   --success: #12b76a;
   --warning: #f79009;
   --danger: #f04438;
-  --danger-soft: #fee4e2;
-  --dark: #101828;
+  --danger-soft: #fbe3e1;
+  --dark: #232a3d;
 
-  /* elevation */
-  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
-  --shadow-md: 0 10px 28px -8px rgba(16, 24, 40, 0.16), 0 3px 8px -4px rgba(16, 24, 40, 0.06);
-  --shadow-lg: 0 24px 60px -18px rgba(16, 24, 40, 0.28), 0 8px 20px -10px rgba(16, 24, 40, 0.1);
+  /* clay shading */
+  --clay-light: rgba(255, 255, 255, 0.92);
+  --clay-dark: rgba(160, 174, 196, 0.45);
 
-  /* shape & rhythm */
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 26px;
+  /* elevation — light from the top-left, shade to the bottom-right */
+  --shadow-xs: -2px -2px 5px var(--clay-light), 2px 2px 5px var(--clay-dark);
+  --shadow-sm: -4px -4px 10px rgba(255, 255, 255, 0.94), 4px 4px 10px rgba(160, 174, 196, 0.44);
+  --shadow-md: -9px -9px 20px rgba(255, 255, 255, 0.95), 9px 9px 20px rgba(160, 174, 196, 0.46);
+  --shadow-lg: -16px -16px 36px rgba(255, 255, 255, 0.96), 16px 16px 36px rgba(160, 174, 196, 0.5);
+  --shadow-xl: -26px -26px 56px rgba(255, 255, 255, 0.98), 26px 26px 56px rgba(160, 174, 196, 0.52);
+
+  /* pressed / recessed states */
+  --shadow-inset-xs: inset -2px -2px 4px rgba(255, 255, 255, 0.8), inset 2px 2px 5px rgba(160, 174, 196, 0.38);
+  --shadow-inset: inset -4px -4px 9px rgba(255, 255, 255, 0.82), inset 4px 4px 9px rgba(160, 174, 196, 0.42);
+  --shadow-brand: 0 10px 22px -10px rgba(59, 91, 253, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.6);
+
+  /* shape & rhythm — clay reads better with generous radii */
+  --r-sm: 13px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-xl: 34px;
   --pad: 20px;
   --bottomnav-h: 62px;
   --sat: env(safe-area-inset-top, 0px);
@@ -183,10 +200,21 @@ h3,
   height: 42px;
   transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.1s ease;
   white-space: nowrap;
+  /* clay buttons are extruded pills, never flat fills */
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:hover {
+  /* no color here: :hover outranks the plain .btn-* variant rules and would
+     paint dark text onto the dark, brand and danger pills */
+  box-shadow: var(--shadow-md);
 }
 
 .btn:active {
   transform: scale(0.985);
+  box-shadow: var(--shadow-inset-xs);
 }
 
 .btn:disabled {
@@ -213,70 +241,81 @@ h3,
 
 .btn-dark,
 .btn-primary {
-  background: var(--dark);
+  background: linear-gradient(145deg, #2e374d, #1f2536);
   color: #fff;
+  box-shadow: 6px 6px 14px rgba(150, 163, 185, 0.45), -5px -5px 12px rgba(255, 255, 255, 0.75);
 }
 .btn-dark:hover,
 .btn-primary:hover {
-  background: #1d2939;
+  background: linear-gradient(145deg, #374159, #262d40);
 }
 
 .btn-light {
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
+  box-shadow: var(--shadow-sm);
 }
 .btn-light:hover {
-  background: var(--surface-2);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-brand {
-  background: var(--brand);
+  background: linear-gradient(145deg, #4a67ff, #2f49d1);
   color: #fff;
+  box-shadow: var(--shadow-brand);
 }
 .btn-brand:hover {
-  background: var(--brand-deep);
+  background: linear-gradient(145deg, #5573ff, #3a56e0);
 }
 
 .btn-soft {
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--ink);
+  box-shadow: var(--shadow-inset-xs);
 }
 .btn-soft:hover {
-  background: #e6e9ef;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset);
 }
 
 .btn-ghost {
-  background: transparent;
+  background: var(--surface);
   color: var(--ink);
-  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  box-shadow: var(--shadow-xs);
 }
 .btn-ghost:hover {
-  background: var(--surface-2);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-quiet {
   background: transparent;
   color: var(--ink-2);
+  box-shadow: none;
 }
 .btn-quiet:hover {
   color: var(--ink);
-  background: var(--surface-2);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .btn-quiet-light {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
   color: #fff;
+  box-shadow: none;
 }
 .btn-quiet-light:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .btn-danger {
-  background: var(--danger);
+  background: linear-gradient(145deg, #f76a5f, #d92d20);
   color: #fff;
+  box-shadow: 0 10px 20px -10px rgba(217, 45, 32, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.6);
 }
 .btn-danger:hover {
-  background: #d92d20;
+  background: linear-gradient(145deg, #f97e74, #e63a2c);
 }
 
 .btn.is-loading svg.spin {
@@ -294,15 +333,21 @@ h3,
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--r-sm);
   color: var(--ink-2);
   position: relative;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: none;
 }
 
 .icon-btn:hover {
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+.icon-btn:active {
+  box-shadow: var(--shadow-inset-xs);
 }
 
 .icon-btn.is-on {
@@ -336,12 +381,14 @@ h3,
 .input-wrap .input {
   width: 100%;
   height: 46px;
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--r-sm);
+  border: 0;
+  border-radius: var(--r-md);
   padding: 0 14px;
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--ink);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  /* recessed wells, the pressed half of the clay pair */
+  box-shadow: var(--shadow-inset);
+  transition: box-shadow 0.15s ease;
 }
 
 .input::placeholder {
@@ -350,8 +397,7 @@ h3,
 
 .input:focus {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3.5px var(--brand-soft);
+  box-shadow: var(--shadow-inset), 0 0 0 2px rgba(59, 91, 253, 0.28);
 }
 
 .input-wrap {
@@ -388,11 +434,12 @@ h3,
 
 .input-wrap .peek:hover {
   color: var(--ink);
-  background: var(--surface-2);
+  background: var(--surface-3);
+  box-shadow: var(--shadow-inset-xs);
 }
 
 .input-wrap.has-error .input {
-  border-color: var(--danger);
+  box-shadow: var(--shadow-inset), 0 0 0 2px rgba(240, 68, 56, 0.45);
 }
 
 .field-hint {
@@ -416,14 +463,15 @@ h3,
   display: grid;
   grid-auto-flow: column;
   background: var(--surface-2);
-  padding: 4px;
-  border-radius: 12px;
+  padding: 5px;
+  border-radius: 999px;
   gap: 4px;
+  box-shadow: var(--shadow-inset-xs);
 }
 
 .seg button {
   height: 36px;
-  border-radius: 9px;
+  border-radius: 999px;
   font-size: 13.5px;
   font-weight: 600;
   color: var(--ink-2);
@@ -433,7 +481,7 @@ h3,
 .seg button.is-on {
   background: var(--surface);
   color: var(--ink);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ---------- avatars, chips, brand ---------- */
@@ -496,19 +544,21 @@ h3,
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 24px;
-  padding: 0 9px;
+  height: 26px;
+  padding: 0 11px;
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--ink-2);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+  box-shadow: var(--shadow-xs);
 }
 
 .chip-shared {
   background: var(--brand-soft);
   color: var(--brand-deep);
+  box-shadow: var(--shadow-inset-xs);
 }
 
 .brand {
@@ -525,11 +575,12 @@ h3,
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9.5px;
-  background: var(--dark);
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  background: linear-gradient(145deg, #4a67ff, #2f49d1);
   color: #fff;
+  box-shadow: 4px 4px 10px rgba(150, 163, 185, 0.45), -3px -3px 8px rgba(255, 255, 255, 0.8);
 }
 
 .brand-word em {
@@ -550,15 +601,15 @@ h3,
   height: 46px;
   padding: 0 8px 0 14px;
   background: var(--surface);
-  border: 1.5px solid var(--line);
+  border: 0;
   border-radius: 999px;
   color: var(--ink-3);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
+  box-shadow: var(--shadow-inset);
 }
 
 .searchbar:focus-within {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3.5px var(--brand-soft);
+  box-shadow: var(--shadow-inset), 0 0 0 2px rgba(59, 91, 253, 0.28);
   color: var(--brand);
 }
 
@@ -4286,3 +4337,595 @@ a.settings-row:hover {
   justify-content: center;
 }
 
+
+/* ============================================================
+   CLAYMORPHISM LAYER
+   One clay surface; height comes from the dual light/shadow
+   pair defined in the tokens. Borders become recessed wells,
+   cards get extruded pairs, and interactive states press
+   inward instead of filling with grey. Covers every screen.
+   ============================================================ */
+
+/* ---------- scrollbars ---------- */
+
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 99px;
+  box-shadow: var(--shadow-inset-xs);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+
+/* ---------- app shell chrome ---------- */
+
+.sidebar {
+  border-right: 0;
+  background: var(--bg);
+  box-shadow: 8px 0 20px -12px rgba(160, 174, 196, 0.55);
+}
+
+.side-link {
+  border-radius: var(--r-sm);
+}
+
+.side-link:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.side-link.active {
+  background: var(--surface);
+  color: var(--brand-deep);
+  font-weight: 650;
+  box-shadow: var(--shadow-sm);
+}
+
+.side-add:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.side-sep {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  box-shadow: var(--shadow-inset-xs);
+  margin: 18px 12px;
+}
+
+.side-storage {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow 0.15s ease;
+}
+
+.side-storage:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.side-account {
+  border: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.side-account:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.crumbs a:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+/* top bar and bottom nav float as clay bars */
+
+.topbar,
+.mobile-menu,
+.site-head {
+  background: rgba(233, 237, 244, 0.86);
+}
+
+.topbar {
+  border-bottom: 0;
+  box-shadow: 0 6px 16px -12px rgba(160, 174, 196, 0.6);
+}
+
+.bottom-nav {
+  background: rgba(233, 237, 244, 0.92);
+  border-top: 0;
+  box-shadow: 0 -8px 20px -14px rgba(160, 174, 196, 0.7);
+  padding: 8px 10px calc(8px + var(--sab));
+}
+
+.bn-item {
+  border-radius: var(--r-md);
+  transition: box-shadow 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.bn-item:hover {
+  background: var(--surface);
+}
+
+.bn-item.is-active {
+  background: var(--surface);
+  color: var(--brand-deep);
+  box-shadow: var(--shadow-sm);
+}
+
+.bn-item:active {
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.mobile-menu {
+  border-bottom: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.mobile-menu > a:hover,
+.menu-toggle:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.site-head.is-scrolled {
+  border-bottom-color: transparent;
+  box-shadow: 0 6px 16px -14px rgba(160, 174, 196, 0.7);
+}
+
+/* ---------- file list and grid ---------- */
+
+.lib-list {
+  gap: 10px;
+}
+
+.file-row {
+  border: 0;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.file-row:hover {
+  border: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.file-row.is-selected {
+  border: 0;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  box-shadow: var(--shadow-inset);
+}
+
+.file-card,
+.folder-tile,
+.home-folder {
+  border: 0;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.file-card:hover,
+.folder-tile:hover,
+.home-folder:hover {
+  border: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.file-card-thumb,
+.folder-tile-ic,
+.home-folder-ic {
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.star-btn {
+  border-radius: 50%;
+  transition: box-shadow 0.14s ease, color 0.14s ease;
+}
+
+.star-btn:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.star-btn.is-on {
+  color: var(--warning);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.folder-glyph {
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---------- selection bar and popovers ---------- */
+
+.select-bar,
+.sort-pop,
+.menu-pop {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.select-bar button:hover,
+.sort-pop button:hover,
+.menu-pop button:hover {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.sort-pop button.is-on,
+.menu-pop button.is-on {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+/* ---------- cards across home, share and marketing ---------- */
+
+.storage-card,
+.settings-card,
+.share-card,
+.use-card,
+.feat,
+.sec-card,
+.how-step,
+.error-panel {
+  border: 0;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.settings-card {
+  border-radius: var(--r-xl);
+}
+
+.storage-card:hover,
+.settings-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.settings-ic,
+.sec-card-ic,
+.activity-ic,
+.how-ic,
+.feat-ic,
+.empty-icon,
+.dropzone-ic,
+.share-missing-ic {
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.settings-row {
+  border-radius: var(--r-md);
+  transition: box-shadow 0.14s ease, background 0.14s ease;
+}
+
+.settings-row:hover,
+a.settings-row:hover {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.activity-share,
+.activity-star {
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.storage-manage:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.how-step:hover,
+.use-card:hover,
+.feat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------- upload ---------- */
+
+.dropzone {
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-inset);
+}
+
+.dropzone.is-dragging {
+  background: var(--brand-soft);
+  box-shadow: var(--shadow-inset), 0 0 0 2px rgba(59, 91, 253, 0.32);
+}
+
+.dropzone-ic {
+  box-shadow: var(--shadow-md);
+}
+
+.up-row {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.up-progress,
+.up-cancel:hover {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.up-progress i {
+  background: linear-gradient(90deg, var(--brand), var(--brand-deep));
+}
+
+/* ---------- modals, sheets and toasts ---------- */
+
+.overlay {
+  background: rgba(63, 74, 102, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal,
+.sheet {
+  border: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-xl);
+}
+
+.sheet-grip {
+  background: var(--surface-3);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.fa-head {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.fa-list button:hover {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.fa-list button:active {
+  background: var(--surface-3);
+}
+
+.fa-list button.danger:hover {
+  background: var(--danger-soft);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.toast {
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.toast-error {
+  background: linear-gradient(145deg, #f76a5f, #d92d20);
+  color: #fff;
+  border: 0;
+}
+
+.empty-state {
+  border: 0;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-inset);
+}
+
+.form-alert {
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+/* ---------- skeletons ---------- */
+
+.skeleton {
+  background: linear-gradient(100deg, #e2e7f0 40%, #f1f4f9 50%, #e2e7f0 60%);
+  background-size: 200% 100%;
+}
+
+.skeleton-row {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- marketing ---------- */
+
+.hero-chip,
+.eyebrow,
+.hero-note {
+  background: var(--surface);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+
+.doc-sheet,
+.doc-slide-block,
+.preview-desk {
+  border: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.phone {
+  border: 0;
+  background: linear-gradient(150deg, #2b3348 0%, #1e2434 100%);
+  box-shadow: var(--shadow-xl), inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.doc-rule,
+.doc-sheet > span:first-child i {
+  background: var(--surface-3);
+}
+
+/* ---------- auth pages ---------- */
+
+.auth-aside {
+  background: linear-gradient(150deg, #2b3348 0%, #1e2434 100%);
+  color: #fff;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.auth-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-lg);
+}
+
+.check {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.check.is-on {
+  background: var(--brand);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+/* ---------- public share page ---------- */
+
+.share-page {
+  background: var(--bg);
+}
+
+.share-done-note {
+  background: var(--brand-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-inset-xs);
+}
+/* ---------- type filter bar + layout gaps ---------- */
+
+.files-typebar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px;
+  margin-bottom: 14px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.files-typebar button {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.files-typebar button:hover {
+  color: var(--ink);
+}
+
+.files-typebar button.is-on {
+  background: var(--surface);
+  color: var(--brand-deep);
+  box-shadow: var(--shadow-sm);
+}
+
+.files-count-note {
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  font-weight: 550;
+}
+
+.app-page {
+  min-width: 0;
+}
+
+.modal-body {
+  display: grid;
+  gap: 4px;
+}
+
+.share-expiry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.side-top {
+  display: grid;
+}
+
+.topbar-star-link {
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- password rule checklist ---------- */
+
+.pw-checklist {
+  padding: 12px 14px;
+  margin: 2px 0 0;
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.pw-checklist li {
+  color: var(--ink-3);
+}
+
+.pw-checklist li svg {
+  flex: none;
+  color: var(--line-strong);
+}
+
+.pw-checklist li.ok {
+  color: var(--success);
+}
+
+.pw-checklist li.ok svg {
+  color: var(--success);
+}
+
+/* ---------- dark clay bands ---------- */
+
+.about-cta,
+.final-cta {
+  background: linear-gradient(150deg, #2b3348 0%, #1e2434 100%);
+  color: #fff;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.about-cta p,
+.final-cta p {
+  color: #b6bfd1;
+}

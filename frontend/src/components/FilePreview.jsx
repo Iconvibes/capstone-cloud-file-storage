@@ -10,28 +10,72 @@ import {
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import { useState } from "react";
-import { Button, IconButton } from "./ui.jsx";
+import { useEffect, useState } from "react";
+import { Button, IconButton, Skeleton } from "./ui.jsx";
 import { FileIcon } from "./FileIcon.jsx";
 import { formatBytes, formatDateOnly, kindLabel } from "./hooks.js";
-import { useLibrary } from "../context/LibraryContext.jsx";
+import { useLibrary, kindOf } from "../context/LibraryContext.jsx";
+import { api, downloadFileBlob, fetchFile, messageFromError } from "../services/api.js";
 
-// Full-screen preview route for one file. Renders a realistic preview surface
-// per file kind; images use the demo thumbnails.
+// Full-screen preview route for one file. The file's live details are fetched
+// from the backend; images render their real cloud-stored bytes, other kinds
+// show a styled placeholder card.
 export default function FilePreview() {
   const { fileId } = useParams();
   const navigate = useNavigate();
-  const { rawFiles, folders, toggleStar, pushToast } = useLibrary();
-  const file = rawFiles.find((f) => f.id === fileId);
+  const { rawFiles, folders, toggleStar, pushToast, loading: libraryLoading } = useLibrary();
+  const [file, setFile] = useState(null);
+  const [detailError, setDetailError] = useState("");
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageFailed, setImageFailed] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [starBusy, setStarBusy] = useState(false);
 
-  if (!file) {
+  const cached = rawFiles.find((f) => f._id === fileId);
+
+  // Detail refresh: reuse the cached copy instantly, then confirm with the
+  // backend (a stale list, e.g. after a rename in another tab, corrects here).
+  useEffect(() => {
+    let alive = true;
+    setDetailError("");
+    fetchFile(fileId)
+      .then((record) => {
+        if (alive) setFile(record);
+      })
+      .catch((cause) => {
+        if (alive) setDetailError(messageFromError(cause, "This file may have been deleted or the link is out of date."));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [fileId]);
+
+  const kind = file ? kindOf(file) : cached?.kind ?? "default";
+
+  // Real image preview: authorized blob load of the cloud asset (via the
+  // backend's download stream, so the JWT stays in the header).
+  useEffect(() => {
+    if (kind !== "image" || !file?._id) return undefined;
+    let objectUrl = null;
+    api
+      .get(`/files/${file._id}/download`, { responseType: "blob" })
+      .then((response) => {
+        objectUrl = URL.createObjectURL(response.data);
+        setImageUrl(objectUrl);
+      })
+      .catch(() => setImageFailed(true));
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [file?._id, kind]);
+
+  if (detailError) {
     return (
       <main className="app-page">
         <div className="preview-missing">
           <FileIcon kind="default" size="lg" />
           <h2>File unavailable</h2>
-          <p>This file may have been deleted or the link is out of date.</p>
+          <p>{detailError}</p>
           <Button variant="ghost" onClick={() => navigate("/app/files")}>
             Back to My Files
           </Button>
@@ -40,11 +84,45 @@ export default function FilePreview() {
     );
   }
 
-  const folder = folders.find((f) => f.id === file.folderId);
+  if (!file) {
+    // Still loading — show skeletons unless the library already failed hard.
+    return (
+      <main className="app-page">
+        <div className="preview-missing">
+          <Skeleton variant="tile" />
+          <Skeleton variant="title" />
+          <Skeleton variant="text" style={{ width: "45%" }} />
+          {libraryLoading ? null : (
+            <Button variant="ghost" onClick={() => navigate("/app/files")}>
+              Back to My Files
+            </Button>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  const folder = folders.find((f) => f._id === (file.folder?._id ?? file.folder));
   const star = async () => {
     setStarBusy(true);
-    await toggleStar(file.id);
+    await toggleStar(file._id);
     setStarBusy(false);
+  };
+
+  const download = async () => {
+    setDownloading(true);
+    try {
+      const name = await downloadFileBlob(`/files/${file._id}/download`, file.displayName);
+      pushToast({ message: `Downloaded ${name}` });
+    } catch (cause) {
+      pushToast({ tone: "error", message: messageFromError(cause, "Download failed. Try again.") });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const share = () => {
+    navigate(`/app/files?share=${file._id}`);
   };
 
   return (
@@ -54,9 +132,9 @@ export default function FilePreview() {
           <ArrowLeft size={20} />
         </IconButton>
         <div className="preview-title">
-          <b>{file.name}</b>
+          <b>{file.displayName}</b>
           <small>
-            {kindLabel(file.kind)} · {formatBytes(file.size)} · Modified {formatDateOnly(file.updatedAt)}
+            {kindLabel(kind)} · {formatBytes(file.size)} · Uploaded {formatDateOnly(file.updatedAt ?? file.createdAt)}
             {folder ? ` · ${folder.name}` : ""}
           </small>
         </div>
@@ -69,10 +147,10 @@ export default function FilePreview() {
           >
             <Star size={19} />
           </IconButton>
-          <IconButton label="Share" onClick={() => pushToast({ message: "Sharing opens from My Files (demo)" })}>
+          <IconButton label="Share" onClick={share}>
             <Share2 size={19} />
           </IconButton>
-          <IconButton label="Download" onClick={() => pushToast({ message: "Download started (demo)" })}>
+          <IconButton label="Download" onClick={download} disabled={downloading}>
             <Download size={19} />
           </IconButton>
           <IconButton label="More actions" className="hide-sm">
@@ -82,14 +160,19 @@ export default function FilePreview() {
       </header>
 
       <div className="preview-stage">
-        {file.kind === "image" && file.thumb ? (
-          <img className="preview-image" src={file.thumb.replace("/640/440", "/1200/820")} alt={file.name} />
-        ) : file.kind === "video" ? (
-          <VideoMock name={file.name} />
-        ) : file.kind === "audio" ? (
-          <AudioMock name={file.name} />
+        {kind === "image" && imageUrl && !imageFailed ? (
+          <img className="preview-image" src={imageUrl} alt={file.displayName} />
+        ) : kind === "image" ? (
+          <div className="doc-preview tone-doc-default">
+            <div className="doc-page">
+              <FileIcon kind="image" name={file.displayName} size="lg" />
+              <p className="doc-caption">
+                {imageFailed ? "Preview couldn't be loaded — download to view this image." : "Loading preview…"}
+              </p>
+            </div>
+          </div>
         ) : (
-          <DocMock file={file} />
+          <DocMock file={file} kind={kind} />
         )}
       </div>
 
@@ -98,7 +181,7 @@ export default function FilePreview() {
         <dl>
           <div>
             <dt>Type</dt>
-            <dd>{kindLabel(file.kind)}</dd>
+            <dd>{kindLabel(kind)}</dd>
           </div>
           <div>
             <dt>Size</dt>
@@ -109,12 +192,12 @@ export default function FilePreview() {
             <dd>{folder?.name ?? "My Files"}</dd>
           </div>
           <div>
-            <dt>Modified</dt>
-            <dd>{formatDateOnly(file.updatedAt)}</dd>
+            <dt>Uploaded</dt>
+            <dd>{formatDateOnly(file.updatedAt ?? file.createdAt)}</dd>
           </div>
           <div>
-            <dt>Shared</dt>
-            <dd>{file.shared ? "Yes — link active" : "Private"}</dd>
+            <dt>Starred</dt>
+            <dd>{file.starred ? "Yes" : "No"}</dd>
           </div>
         </dl>
       </aside>
@@ -122,98 +205,16 @@ export default function FilePreview() {
   );
 }
 
-// Realistic document/PDF preview surface rendered in CSS.
-function DocMock({ file }) {
+// Stylized preview surface for non-image kinds, labeled with the real kind.
+function DocMock({ file, kind }) {
   return (
-    <div className={`doc-preview tone-doc-${file.kind}`}>
+    <div className={`doc-preview tone-doc-${kind}`}>
       <div className="doc-page">
-        <span className="doc-rule w70" />
-        <span className="doc-rule w95" />
-        <span className="doc-rule w85" />
-        <span className="doc-rule gap" />
-        <span className="doc-rule w60" />
-        <span className="doc-rule w90" />
-        <span className="doc-rule w45" />
-        {file.kind === "sheet" ? (
-          <span className="doc-sheet" aria-hidden="true">
-            {Array.from({ length: 8 }, (_, i) => (
-              <span key={i}>
-                <i />
-                <i />
-                <i />
-                <i />
-              </span>
-            ))}
-          </span>
-        ) : null}
-        {file.kind === "slides" ? (
-          <span className="doc-slide-block" aria-hidden="true">
-            <i />
-            <i />
-          </span>
-        ) : null}
+        <FileIcon kind={kind} name={file.displayName} size="lg" />
+        <p className="doc-caption">
+          {kindLabel(kind)} preview isn't rendered inline — download to view the full copy.
+        </p>
       </div>
-      <p className="doc-caption">
-        Preview generated for {kindLabel(file.kind)} files. Download for the full copy.
-      </p>
-    </div>
-  );
-}
-
-function VideoMock({ name }) {
-  const [playing, setPlaying] = useState(false);
-  return (
-    <div className={`video-preview ${playing ? "is-playing" : ""}`.trim()}>
-      <div className="video-surface">
-        <button
-          type="button"
-          className="video-bigplay"
-          aria-label={playing ? "Pause preview" : "Play preview"}
-          onClick={() => setPlaying((v) => !v)}
-        >
-          {playing ? <Pause size={26} /> : <Play size={26} />}
-        </button>
-      </div>
-      <div className="video-bar">
-        <SkipBack size={16} aria-hidden="true" />
-        <button type="button" onClick={() => setPlaying((v) => !v)} aria-label={playing ? "Pause" : "Play"}>
-          {playing ? <Pause size={18} /> : <Play size={18} />}
-        </button>
-        <SkipForward size={16} aria-hidden="true" />
-        <span className="video-track">
-          <i style={{ width: playing ? "38%" : "12%" }} />
-        </span>
-        <span className="video-time">1:12 / 3:04</span>
-      </div>
-      <p className="doc-caption">{name} — video preview (demo).</p>
-    </div>
-  );
-}
-
-function AudioMock({ name }) {
-  const [playing, setPlaying] = useState(false);
-  return (
-    <div className="audio-preview">
-      <div className="audio-art" aria-hidden="true">
-        <svg viewBox="0 0 120 40" width="220" height="74">
-          {Array.from({ length: 28 }, (_, i) => {
-            const h = 8 + Math.abs(Math.sin(i * 1.7)) * 26;
-            return <rect key={i} x={i * 8} y={(40 - h) / 2} width="4" height={h} rx="2" fill="currentColor" />;
-          })}
-        </svg>
-      </div>
-      <div className="video-bar">
-        <SkipBack size={16} aria-hidden="true" />
-        <button type="button" onClick={() => setPlaying((v) => !v)} aria-label={playing ? "Pause" : "Play"}>
-          {playing ? <Pause size={18} /> : <Play size={18} />}
-        </button>
-        <SkipForward size={16} aria-hidden="true" />
-        <span className="video-track">
-          <i style={{ width: playing ? "54%" : "8%" }} />
-        </span>
-        <span className="video-time">0:42 / 2:20</span>
-      </div>
-      <p className="doc-caption">{name}</p>
     </div>
   );
 }

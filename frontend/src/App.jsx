@@ -12,12 +12,10 @@ import Landing from "./pages/Landing.jsx";
 import About from "./pages/About.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Home from "./pages/Home.jsx";
 import Files from "./pages/Files.jsx";
 import Starred from "./pages/Starred.jsx";
 import Shared from "./pages/Shared.jsx";
-import Trash from "./pages/Trash.jsx";
 import Profile from "./pages/Profile.jsx";
 import FilePreview from "./components/FilePreview.jsx";
 import SharedFile from "./pages/SharedFile.jsx";
@@ -27,7 +25,10 @@ import { useLibrary } from "./context/LibraryContext.jsx";
 // The signed-in workspace: sidebar on desktop, bottom nav on mobile, plus the
 // shared upload / new-folder actions and toast stack.
 function AppLayout() {
-  const { toasts, dismissToast, uploadOpen, setUploadOpen, newFolderOpen, setNewFolderOpen } = useLibrary();
+  const {
+    toasts, dismissToast, uploadOpen, setUploadOpen, uploadFolderId, setUploadFolderId,
+    newFolderOpen, setNewFolderOpen,
+  } = useLibrary();
   const location = useLocation();
   const hideChrome = location.pathname.startsWith("/app/preview");
 
@@ -38,7 +39,14 @@ function AppLayout() {
         <Outlet />
         {!hideChrome ? <BottomNav /> : null}
       </div>
-      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <UploadModal
+        open={uploadOpen}
+        folderId={uploadFolderId}
+        onClose={() => {
+          setUploadOpen(false);
+          setUploadFolderId(null);
+        }}
+      />
       <NewFolderModal open={newFolderOpen} onClose={() => setNewFolderOpen(false)} />
       <Toasts items={toasts} onDismiss={dismissToast} />
     </div>
@@ -52,7 +60,6 @@ function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/share/:token" element={<SharedFile />} />
 
       <Route
@@ -70,7 +77,6 @@ function AppRoutes() {
         <Route path="files/folder/:folderId" element={<Files />} />
         <Route path="starred" element={<Starred />} />
         <Route path="shared" element={<Shared />} />
-        <Route path="trash" element={<Trash />} />
         <Route path="profile" element={<Profile />} />
         <Route path="preview/:fileId" element={<FilePreview />} />
       </Route>

@@ -27,6 +27,31 @@ const createFolder = async (req, res, next) => {
   }
 };
 
+// Rename a folder. The unique index is per (owner, name), so renaming into
+// an existing sibling name surfaces as the same 409 as folder creation.
+const renameFolder = async (req, res, next) => {
+  try {
+    const folder = await Folder.findById(req.params.id);
+    if (!folder) {
+      return errorResponse(res, "Folder not found", 404);
+    }
+
+    if (String(folder.owner) !== String(req.user._id)) {
+      return errorResponse(res, "You don't have permission to do that", 403);
+    }
+
+    folder.name = req.body.name;
+    await folder.save();
+
+    return successResponse(res, folder, "Folder renamed successfully", 200);
+  } catch (err) {
+    if (err.code === 11000) {
+      return errorResponse(res, "A folder with this name already exists", 409);
+    }
+    next(err);
+  }
+};
+
 const deleteFolder = async (req, res, next) => {
   try {
     const folder = await Folder.findById(req.params.id);
@@ -47,4 +72,4 @@ const deleteFolder = async (req, res, next) => {
   }
 };
 
-module.exports = { listFolders, createFolder, deleteFolder };
+module.exports = { listFolders, createFolder, renameFolder, deleteFolder };

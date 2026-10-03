@@ -2,38 +2,42 @@ import { useEffect, useState } from "react";
 import { Button, Field, Modal } from "./ui.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
 
-export default function RenameModal({ file, onClose }) {
-  const { renameFile } = useLibrary();
-  const [name, setName] = useState(file?.name ?? "");
+// Rename modal for a file or a folder — pass `folder` for folders.
+export default function RenameModal({ file, folder, onClose }) {
+  const { renameFile, renameFolder } = useLibrary();
+  const target = folder ?? file;
+  const [name, setName] = useState(target?.name ?? target?.displayName ?? "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setName(file?.name ?? "");
+    setName(target?.name ?? target?.displayName ?? "");
     setError("");
-  }, [file]);
+  }, [target]);
+
+  if (!target) return null;
 
   const submit = async (event) => {
     event.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setError("Give the file a name.");
+      setError("Give it a name.");
       return;
     }
-    if (trimmed === file.name) {
+    if (trimmed === (target.name ?? target.displayName)) {
       onClose();
       return;
     }
     setBusy(true);
-    await renameFile(file.id, trimmed);
+    const result = folder ? await renameFolder(target._id, trimmed) : await renameFile(target._id, trimmed);
     setBusy(false);
-    onClose();
+    if (result) onClose();
   };
 
   return (
-    <Modal open={Boolean(file)} onClose={onClose} title="Rename">
+    <Modal open={Boolean(target)} onClose={onClose} title={folder ? "Rename folder" : "Rename"}>
       <form onSubmit={submit} className="stack">
-        <Field label="File name" error={error}>
+        <Field label={folder ? "Folder name" : "File name"} error={error}>
           <input
             className="input"
             value={name}
@@ -42,7 +46,7 @@ export default function RenameModal({ file, onClose }) {
               setName(event.target.value);
               setError("");
             }}
-            aria-label="File name"
+            aria-label={folder ? "Folder name" : "File name"}
           />
         </Field>
         <div className="modal-actions">

@@ -32,12 +32,9 @@ export default function AppMockup({ compact = false }) {
         </div>
         <div className="phone-storage">
           <div className="phone-storage-row">
-            <span>Storage</span>
-            <b>38.4 GB of 100 GB</b>
+            <span>Your library</span>
+            <b>164 files · 12.6 GB</b>
           </div>
-          <span className="bar">
-            <i style={{ width: "38%" }} />
-          </span>
         </div>
         <div className="phone-row-title">
           <span>Recent</span>

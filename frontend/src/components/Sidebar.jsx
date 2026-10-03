@@ -1,6 +1,7 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FolderPlus, Home, Share2, Star, Trash2, Folder as FolderIcon, Settings, Files } from "lucide-react";
-import { Brand, Button } from "./ui.jsx";
+import { Link, NavLink } from "react-router-dom";
+import { FolderPlus, Home, Share2, Star, Settings, Files } from "lucide-react";
+import { Brand, Avatar } from "./ui.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
 
 const NAV = [
@@ -8,14 +9,21 @@ const NAV = [
   { to: "/app/files", label: "My Files", Icon: Files, end: false },
   { to: "/app/shared", label: "Shared", Icon: Share2, end: false },
   { to: "/app/starred", label: "Starred", Icon: Star, end: false },
-  { to: "/app/trash", label: "Trash", Icon: Trash2, end: false },
 ];
 
-export default function Sidebar({ onNewFolder, onUpload }) {
-  const navigate = useNavigate();
-  const { folders, storage, user } = useLibrary();
+export default function Sidebar({ onNewFolder }) {
+  const { folders } = useLibrary();
+  const { user } = useAuth();
   const recent = folders.slice(0, 4);
-  const usedPct = storage ? Math.min(100, Math.round((storage.usedGb / storage.totalGb) * 100)) : 0;
+
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((part) => part[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() ?? "A";
 
   return (
     <aside className="sidebar">
@@ -40,30 +48,20 @@ export default function Sidebar({ onNewFolder, onUpload }) {
         </p>
         <nav className="side-nav side-folders" aria-label="Folders">
           {recent.map((folder) => (
-            <NavLink key={folder.id} to={`/app/files/folder/${folder.id}`} className="side-link side-folder-link">
+            <NavLink key={folder._id} to={`/app/files/folder/${folder._id}`} className="side-link side-folder-link">
               <span className="side-dot" aria-hidden="true" />
               <span className="side-folder-name">{folder.name}</span>
-              <b>{folder.fileCount}</b>
+              <b>{folder.fileCount ?? 0}</b>
             </NavLink>
           ))}
         </nav>
       </div>
       <div className="side-bottom">
-        <button type="button" className="side-storage" onClick={() => navigate("/app/profile")}>
-          <div className="side-storage-row">
-            <span>Storage</span>
-            <b>{storage ? `${storage.usedLabel} of ${storage.totalLabel}` : "—"}</b>
-          </div>
-          <span className="bar">
-            <i style={{ width: `${usedPct}%` }} />
-          </span>
-          <span className="side-storage-cta">Manage storage</span>
-        </button>
         <NavLink to="/app/profile" className="side-account">
-          <span className="avatar avatar-sm tone-0">{user?.initials ?? "AN"}</span>
+          <span className="avatar avatar-sm tone-0">{initials}</span>
           <span className="side-account-meta">
             <b>{user?.name ?? "Account"}</b>
-            <small>{user?.plan ?? "Free"} plan</small>
+            <small>{user?.email ?? ""}</small>
           </span>
           <Settings size={15} aria-hidden="true" />
         </NavLink>

@@ -14,18 +14,18 @@ export function FileListItem({ file, onOpen, onToggleStar, selected, onSelect, s
           className={`check ${selected ? "is-on" : ""}`.trim()}
           role="checkbox"
           aria-checked={selected}
-          aria-label={selected ? `Deselect ${file.name}` : `Select ${file.name}`}
-          onClick={() => onSelect(file.id)}
+          aria-label={selected ? `Deselect ${file.displayName}` : `Select ${file.displayName}`}
+          onClick={() => onSelect(file._id)}
         >
           {selected ? "✓" : ""}
         </button>
       ) : null}
-      <button type="button" className="file-row-main" onClick={() => (selectMode ? onSelect(file.id) : onOpen(file))}>
-        <FileIcon kind={file.kind} name={file.name} thumb={file.thumb} />
+      <button type="button" className="file-row-main" onClick={() => (selectMode ? onSelect(file._id) : onOpen(file))}>
+        <FileIcon kind={file.kind} name={file.displayName} thumb={file.thumb} />
         <span className="file-row-name">
-          <b>{file.name}</b>
+          <b>{file.displayName}</b>
           <small>
-            {formatBytes(file.size)} · {formatDate(file.updatedAt)}
+            {formatBytes(file.size)} · {formatDate(file.updatedAt ?? file.createdAt)}
             {folderName ? ` · ${folderName}` : ""}
           </small>
         </span>
@@ -41,8 +41,8 @@ export function FileListItem({ file, onOpen, onToggleStar, selected, onSelect, s
             <button
               type="button"
               className={`star-btn ${file.starred ? "is-on" : ""}`.trim()}
-              aria-label={file.starred ? `Remove ${file.name} from starred` : `Add ${file.name} to starred`}
-              onClick={() => onToggleStar(file.id)}
+              aria-label={file.starred ? `Remove ${file.displayName} from starred` : `Add ${file.displayName} to starred`}
+              onClick={() => onToggleStar(file._id)}
             >
               <Star size={17} aria-hidden="true" />
             </button>
@@ -60,10 +60,10 @@ export function FileCard({ file, onOpen }) {
         {file.thumb ? (
           <img src={file.thumb} alt="" loading="lazy" />
         ) : (
-          <FileIcon kind={file.kind} name={file.name} size="lg" />
+          <FileIcon kind={file.kind} name={file.displayName} size="lg" />
         )}
       </span>
-      <span className="file-card-name">{file.name}</span>
+      <span className="file-card-name">{file.displayName}</span>
       <span className="file-card-meta">{formatBytes(file.size)}</span>
     </button>
   );
@@ -80,20 +80,10 @@ export function FolderCard({ folder, onOpen, onToggleStar }) {
         </span>
         <span className="folder-card-name">
           <b>{folder.name}</b>
-          <small>{folder.fileCount} items</small>
+          <small>{folder.fileCount ?? 0} items</small>
         </span>
         <ChevronRight size={16} aria-hidden="true" />
       </button>
-      {onToggleStar ? (
-        <button
-          type="button"
-          className={`star-btn ${folder.starred ? "is-on" : ""}`.trim()}
-          aria-label={folder.starred ? `Remove ${folder.name} from starred` : `Add ${folder.name} to starred`}
-          onClick={() => onToggleStar(folder.id)}
-        >
-          <Star size={16} aria-hidden="true" />
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -108,7 +98,7 @@ export function FolderTile({ folder, onOpen }) {
         </svg>
       </span>
       <span className="folder-tile-name">{folder.name}</span>
-      <span className="folder-tile-meta">{folder.fileCount} items</span>
+      <span className="folder-tile-meta">{folder.fileCount ?? 0} items</span>
     </button>
   );
 }
@@ -132,10 +122,10 @@ export default function FileList({
     return (
       <div className="lib-grid">
         {folders.map((folder) => (
-          <FolderTile key={folder.id} folder={folder} onOpen={onOpenFolder} />
+          <FolderTile key={folder._id} folder={folder} onOpen={onOpenFolder} />
         ))}
         {files.map((file) => (
-          <FileCard key={file.id} file={file} onOpen={onOpenFile} />
+          <FileCard key={file._id} file={file} onOpen={onOpenFile} />
         ))}
       </div>
     );
@@ -144,18 +134,18 @@ export default function FileList({
   return (
     <div className="lib-list">
       {folders.map((folder) => (
-        <FolderCard key={folder.id} folder={folder} onOpen={onOpenFolder} onToggleStar={onToggleFileStar} />
+        <FolderCard key={folder._id} folder={folder} onOpen={onOpenFolder} />
       ))}
       {files.map((file) => (
         <FileListItem
-          key={file.id}
+          key={file._id}
           file={file}
           onOpen={onOpenFile}
           onToggleStar={onToggleFileStar}
           selectMode={selectMode}
-          selected={selectedIds.includes(file.id)}
+          selected={selectedIds.includes(file._id)}
           onSelect={onToggleSelect}
-          folderName={folderNames[file.folderId]}
+          folderName={folderNames[file.folder?._id ?? file.folder]}
         />
       ))}
     </div>

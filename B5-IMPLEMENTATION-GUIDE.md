@@ -158,7 +158,7 @@ Base API URL: `http://localhost:5000/api` (or production API domain)
   ```
 * **Note on File Size (`size`)**:
   * The backend returns `size` in **raw bytes as a Number** (e.g. `790665` bytes, not a string like `"772 KB"`).
-  * **Why?** This adheres to the Capstone plan (Section 5 & 6.2) and allows mathematical sorting and download progress calculations.
+  * **Why?** This allows mathematical sorting and download progress calculations.
   * **Frontend Action**: The frontend should format this number into a human-readable string (e.g. `772.1 KB`, `2.4 MB`) using the `formatSize()` helper provided in Section 4 below.
 * **Error Responses**:
   * `404`: `{"success": false, "message": "This link is invalid or has expired."}`

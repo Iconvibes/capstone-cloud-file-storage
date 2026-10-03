@@ -49,7 +49,7 @@ export function PasswordField({ label = "Password", value, onChange, placeholder
           placeholder={placeholder}
           autoComplete={autoComplete}
           required
-          minLength={6}
+          minLength={8}
         />
         <button type="button" className="peek" onClick={() => setVisible((v) => !v)} aria-label={visible ? "Hide password" : "Show password"}>
           {visible ? <EyeOff size={17} /> : <Eye size={17} />}
