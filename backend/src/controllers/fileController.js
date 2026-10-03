@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 // filesystems would otherwise load models/File.js twice and crash the app.)
 const File = mongoose.models.File || require("../models/File");
 const { successResponse, errorResponse } = require("../utils/apiResponse");
+const { getCloudinaryStream } = require("../services/cloudinaryService");
 
 // Pagination defaults for the list endpoint
 const DEFAULT_PAGE = 1;
@@ -117,26 +118,11 @@ const downloadFile = async (req, res, next) => {
       return errorResponse(res, "File storage is unavailable, please try again later", 502);
     }
 
-    let filename = file.displayName || file.originalName;
-    // Keep only printable ASCII without quotes or control characters; fall back if nothing survives
-    const sanitized = String(filename)
-      .replace(/[^\x20-\x7E]/g, "")
-      .replace(/["\\]/g, "");
-    if (sanitized) {
-      filename = sanitized;
-    }
+    const filename = file.displayName || file.originalName || "download";
+    const encodedFilename = encodeURIComponent(filename);
+    const asciiFilename = filename.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "");
 
-    // Only forward a Range header when the client actually sent one —
-    // an unconditional download should get an unconditional upstream request.
-    const upstreamHeaders = {};
-    if (req.headers.range) {
-      upstreamHeaders.Range = req.headers.range;
-    }
-
-    const upstream = await fetch(file.cloudUrl, {
-      redirect: "follow",
-      headers: upstreamHeaders,
-    }).catch(() => null);
+    const upstream = await getCloudinaryStream(file, req.headers.range);
 
     if (!upstream || !upstream.body) {
       return errorResponse(res, "File storage is unavailable, please try again later", 502);
@@ -149,8 +135,8 @@ const downloadFile = async (req, res, next) => {
     }
 
     const headers = {
-      "Content-Type": upstream.headers.get("content-type") || file.mimeType || "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Type": file.mimeType || upstream.headers.get("content-type") || "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${asciiFilename || "download"}"; filename*=UTF-8''${encodedFilename}`,
     };
     for (const h of ["content-length", "content-range", "accept-ranges"]) {
       const value = upstream.headers.get(h);

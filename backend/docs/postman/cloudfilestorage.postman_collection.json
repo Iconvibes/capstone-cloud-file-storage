@@ -1,0 +1,102 @@
+{
+  "info": {
+    "_postman_id": "b5-cffs-postman-0000-0000-000000000001",
+    "name": "CloudFileStorageApp API",
+    "description": "Collection for the CloudFileStorageApp backend. Set `baseUrl` (default http://localhost:5000) and, after login/register, copy the JWT into `token`. `shareToken` is captured automatically from the share-create response.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "fileId", "value": "" },
+    { "key": "shareToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"TestPass123\"\n}" }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.environment.set('token', pm.response.json().data.token);"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"TestPass123\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "item": [
+        {
+          "name": "Upload file",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/upload",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": [] }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        { "name": "List files", "request": { "method": "GET", "url": "{{baseUrl}}/api/files?page=1&limit=10", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Get file", "request": { "method": "GET", "url": "{{baseUrl}}/api/files/{{fileId}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Download file", "request": { "method": "GET", "url": "{{baseUrl}}/api/files/{{fileId}}/download", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Rename / move file", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/files/{{fileId}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"displayName\": \"Renamed file.txt\",\n  \"folder\": null\n}" } } },
+        { "name": "Delete file", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/files/{{fileId}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
+      ]
+    },
+    {
+      "name": "Folders",
+      "item": [
+        { "name": "List folders", "request": { "method": "GET", "url": "{{baseUrl}}/api/folders", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Create folder", "request": { "method": "POST", "url": "{{baseUrl}}/api/folders", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"My Documents\"\n}" } } }
+      ]
+    },
+    {
+      "name": "File sharing",
+      "item": [
+        {
+          "name": "Create share link (optional expiry)",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.environment.set('shareToken', pm.response.json().data.token);"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/files/{{fileId}}/share",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"expiresAt\": \"2026-12-31T23:59:59.000Z\"\n}" }
+          }
+        },
+        {
+          "name": "Revoke share link",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/files/{{fileId}}/share", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] }
+        },
+        { "name": "Get shared file info (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/share/{{shareToken}}" } },
+        { "name": "Download shared file (public)", "request": { "method": "GET", "url": "{{baseUrl}}/api/share/{{shareToken}}/download" } }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/api/health" } }
+      ]
+    }
+  ]
+}
