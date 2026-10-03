@@ -1,4 +1,5 @@
 const File = require('../models/File');
+const Folder = require('../models/Folder');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
@@ -23,8 +24,13 @@ async function uploadFile(req, res) {
     }
 
     const { folderId } = req.body;
-    // folderId was validated by uploadBodySchema (optional/nullable ObjectId).
-    // TODO: confirm with B4 — this should likely query the Folder model, not File
+    if (folderId) {
+      if (!mongoose.Types.ObjectId.isValid(folderId)) {
+        return errorResponse(res, 'Invalid folder', 400);
+      }
+      // TODO: confirm with B4 — this should likely query the Folder model, not File
+      // const folder = await Folder.findOne({ _id: folderId, owner: req.user.id });
+    }
 
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: `cloudfilestorageapp/${req.user.id}`,
