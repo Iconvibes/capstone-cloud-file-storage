@@ -3,35 +3,39 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
-
 const authRoutes = require("./routes/authRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const fileRoutes = require("./routes/fileRoutes");
 const folderRoutes = require("./routes/folderRoutes");
 const shareRoutes = require("./routes/shareRoutes");
 const errorHandler = require("./middleware/errorHandler");
+const { apiLimiter } = require("./middleware/rateLimiters");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(helmet());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
   credentials: true,
 }));
 
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 })); // keep the general one too
-// add near your other imports in app.js, or in a separate middleware/rateLimiters.js file
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5, // only 5 login attempts per 15 min per IP
-  message: { success: false, message: "Too many login attempts, please try again later", data: null },
-});
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 }));
+app.use("/api", apiLimiter);
+
+
 
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "CloudFileStorageApp API is running" });

@@ -2,6 +2,7 @@ const cloudinary = require("../config/cloudinary");
 const File = require("../models/File");
 const Folder = require("../models/Folder");
 const ShareLink = require("../models/ShareLink");
+const { getCloudinaryResourceType } = require("../services/cloudinaryService");
 const { successResponse, errorResponse } = require("../utils/apiResponse");
 
 const updateFile = async (req, res, next) => {
@@ -59,7 +60,7 @@ const deleteFile = async (req, res, next) => {
     await ShareLink.deleteMany({ file: file._id });
 
     if (file.cloudPublicId) {
-      const resourceType = file.fileType === "image" ? "image" : "raw";
+      const resourceType = getCloudinaryResourceType(file);
       await cloudinary.uploader.destroy(file.cloudPublicId, { resource_type: resourceType });
     }
 
