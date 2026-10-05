@@ -11,8 +11,18 @@ All responses follow this shape:
 or on error:
 
 ```json
-{ "success": false, "message": "...", "errors": [ ] }
+{ "success": false, "message": "...", "data": null, "errors": [ ] }
 ```
+
+(`errors` is only present on validation failures; every other error carries `data: null` so the shape stays identical.)
+
+## Health
+
+### GET /api/health
+
+Liveness check — no auth. Useful for uptime monitors.
+
+- `200` — `{ "success": true, "message": "...", "data": null }`
 
 ## Authentication
 
@@ -286,9 +296,44 @@ Delete a folder. Files inside it are **not** deleted — they're moved to no fol
 
 ---
 
+### PATCH /api/folders/:id
+
+Rename a folder.
+
+**Auth required:** Yes
+
+**Body (JSON):**
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| name | String | Yes | 1–100 characters, must be unique per user (case-insensitive) |
+
+**Responses:**
+
+- `200` — Returns the renamed folder
+- `400` — Name missing/empty or too long, or invalid folder ID format
+- `403` — You don't own this folder
+- `404` — Folder not found
+- `409` — You already have a folder with this name
+
+---
+
 ## Sharing
 
 A file can have at most one **active** share link at a time (enforced at the database level). Revoked links are kept as history rather than deleted. Creating and revoking a link is owner-only and lives under `/api/files` (see above); consuming a link is public and lives under `/api/share`.
+
+### GET /api/share/links
+
+List the signed-in user's own active share links, newest first, each with the shared file's display details.
+
+**Auth required:** Yes
+
+**Responses:**
+
+- `200` — Returns `{ links: [{ _id, token, expiresAt, createdAt, file: { _id, displayName, size, ... } }] }`
+- `401` — Not authorized
+
+---
 
 ### GET /api/share/:token
 

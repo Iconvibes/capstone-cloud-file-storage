@@ -205,7 +205,12 @@ const downloadSharedFile = async (req, res, next) => {
       "Content-Type": file.mimeType || upstream.headers.get("content-type") || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${asciiFilename || "download"}"; filename*=UTF-8''${encodedFilename}`,
     };
+    // Same gzip guard as the owner-facing download: never forward a
+    // compressed content-length when fetch has already decompressed the body.
+    const contentEncoding = (upstream.headers.get("content-encoding") || "identity").toLowerCase();
+    const isIdentityEncoding = contentEncoding === "identity";
     for (const h of ["content-length", "content-range", "accept-ranges"]) {
+      if (h === "content-length" && !isIdentityEncoding) continue;
       const value = upstream.headers.get(h);
       if (value) headers[h] = value;
     }

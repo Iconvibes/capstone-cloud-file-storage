@@ -1,6 +1,11 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
-
-import { demoUser } from "../services/mockData";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  fetchCurrentUser,
+  getStoredToken,
+  login as loginRequest,
+  register as registerRequest,
+  storeToken,
+} from "../services/api.js";
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = "lumen-vault-user";
@@ -14,6 +19,9 @@ function readStoredUser() {
 }
 
 export function AuthProvider({ children }) {
+  // The user record is cached in localStorage so a page refresh renders the
+  // workspace instantly; the JWT itself is re-checked against the backend on
+  // mount (and on every API call via the axios interceptor).
   const [user, setUser] = useState(readStoredUser);
 
   const persist = useCallback((nextUser) => {
@@ -26,33 +34,51 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Restores a saved session: without a token there is nothing to resume;
+  // with one, confirm it is still valid by asking the backend who we are.
+  // A 401 is handled by the api interceptor (redirects to /login?expired=1).
+  useEffect(() => {
+    if (!getStoredToken()) {
+      persist(null);
+      return;
+    }
+    // Token present: confirm it is still valid and refresh the cached profile
+    // (covers a cleared/aged user cache while the token itself is fine).
+    // A 401 is handled by the api interceptor (clears + redirects to
+    // /login?expired=1).
+    fetchCurrentUser()
+      .then((profile) => {
+        if (profile) persist({ id: profile.id, name: profile.name, email: profile.email });
+      })
+      .catch(() => {});
+  }, [persist]);
+
   const login = useCallback(
-    async ({ email }) => {
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      const known = readStoredUser();
-      const account = known?.email?.toLowerCase() === email.toLowerCase() ? known : { ...demoUser, email };
-      persist(account);
-      return account;
+    async ({ email, password }) => {
+      const data = await loginRequest({ email, password });
+      storeToken(data.token);
+      persist(data.user);
+      return data.user;
     },
     [persist],
   );
 
   const signup = useCallback(
-    async ({ name, email }) => {
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      const account = { ...demoUser, name: name || demoUser.name, email };
-      persist(account);
-      return account;
+    async ({ name, email, password }) => {
+      const data = await registerRequest({ name, email, password });
+      storeToken(data.token);
+      persist(data.user);
+      return data.user;
     },
     [persist],
   );
 
-  const logout = useCallback(() => persist(null), [persist]);
+  const logout = useCallback(() => {
+    storeToken(null);
+    persist(null);
+  }, [persist]);
 
-  const value = useMemo(
-    () => ({ user, login, signup, logout }),
-    [user, login, signup, logout],
-  );
+  const value = useMemo(() => ({ user, login, signup, logout }), [user, login, signup, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -64,4 +90,3 @@ export function useAuth() {
 }
 
 export default AuthContext;
-

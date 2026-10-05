@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CircleAlert } from "lucide-react";
 import { Brand, Button, Field, PasswordField } from "../components/ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { messageFromError } from "../services/api.js";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const [params] = useSearchParams();
+  const sessionEnded = params.get("expired") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,8 +22,8 @@ export default function Login() {
       setError("Enter a valid email address.");
       return;
     }
-    if (password.length < 6) {
-      setError("Passwords are at least 6 characters.");
+    if (!password) {
+      setError("Enter your password.");
       return;
     }
     setError("");
@@ -28,8 +31,8 @@ export default function Login() {
     try {
       await login({ email, password });
       navigate(location.state?.from ?? "/app", { replace: true });
-    } catch {
-      setError("We couldn't sign you in. Check your details and try again.");
+    } catch (cause) {
+      setError(messageFromError(cause, "We couldn't sign you in. Check your details and try again."));
       setBusy(false);
     }
   };
@@ -44,6 +47,11 @@ export default function Login() {
           <Brand />
           <h1>Welcome back</h1>
           <p className="auth-sub">Sign in to reach your files.</p>
+          {sessionEnded ? (
+            <p className="form-alert" role="status">
+              <CircleAlert size={15} /> Your session ended. Sign in again to continue.
+            </p>
+          ) : null}
           {error ? (
             <p className="form-alert" role="alert">
               <CircleAlert size={15} /> {error}
@@ -62,11 +70,6 @@ export default function Login() {
               />
             </Field>
             <PasswordField label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
-            <div className="auth-row">
-              <Link to="/forgot-password" className="auth-forgot">
-                Forgot password?
-              </Link>
-            </div>
             <Button type="submit" size="lg" loading={busy} className="btn-block">
               Sign in
             </Button>

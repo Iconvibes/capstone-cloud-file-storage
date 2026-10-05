@@ -2,9 +2,9 @@
 
 Lumen Vault is a cloud file storage product: a calm place to store, organize, preview, and share files from any device. This repository contains the complete frontend — a mobile-first React application with a polished desktop experience, wrapped in a marketing site.
 
-The frontend runs entirely on **demo data**. There is no live backend behind it yet; every screen is built so the real API can replace the mock layer without touching UI code (see [Swapping in the real API](#6-the-services-layer--swapping-in-the-real-api)).
+The frontend is wired to the **real backend API** in `backend/` (see `../Readmefile.md` for the API reference): accounts, uploads with progress, folders, search, share links and downloads all talk to the live server. Copy `.env.example` to `.env` first so the API base URL is set.
 
-**Try it:** run the dev server, open any screen — or sign in with any email address and a password of at least 6 characters to enter the demo workspace at `/app`.
+**Try it:** start the backend, start the dev server, then create an account at `/register` and sign in.
 
 ---
 
@@ -17,7 +17,7 @@ The frontend runs entirely on **demo data**. There is no live backend behind it 
 | Routing          | React Router 7                             |
 | Icons            | lucide-react (the only icon set used)      |
 | Styling          | Plain CSS (`src/styles.css`), no framework |
-| HTTP client      | axios (wired in `src/services/api.js`)     |
+| HTTP client      | axios (in `src/services/api.js`)           |
 | Package manager  | npm                                        |
 
 There is no Tailwind, CSS-in-JS, component library, or state-management library. If you are looking for one, you are looking too hard.
@@ -47,13 +47,13 @@ npm run dev
 
 **Environment variables**
 
-Copy `.env.example` to `.env` if you want to override the API target:
+Copy `.env.example` to `.env` and point it at the running backend:
 
 ```
 VITE_API_URL=http://localhost:5000/api
 ```
 
-Nothing consumes this yet — it is read by `src/services/api.js` and will drive the real API client once the mock layer is replaced.
+`src/services/api.js` reads this at build time; every request goes through that one axios instance (JWT attachment, error extraction).
 
 ---
 
@@ -74,8 +74,7 @@ frontend/src/
 │   ├── Home.jsx          # /app — dashboard
 │   ├── Files.jsx         # /app/files + /app/files/folder/:folderId
 │   ├── Starred.jsx       # /app/starred
-│   ├── Shared.jsx        # /app/shared
-│   ├── Trash.jsx         # /app/trash
+│   ├── Shared.jsx        # /app/shared — your active share links
 │   ├── Profile.jsx       # /app/profile — settings
 │   ├── SharedFile.jsx    # /share/:token — public download page
 │   └── NotFound.jsx      # 404
@@ -90,12 +89,12 @@ frontend/src/
 │   ├── [features]        # Domain widgets
 │   │   ├── FileList.jsx      # List rows, grid cards, folder cards
 │   │   ├── FileActions.jsx   # Per-file action bottom sheet
-│   │   ├── FilePreview.jsx   # Full preview route (image/doc/video/audio)
+│   │   ├── FilePreview.jsx   # Full preview route (images render real bytes)
 │   │   ├── FileIcon.jsx      # Colored type tiles + image thumbs
-│   │   ├── StorageCard.jsx   # Segmented storage usage card
+│   │   ├── StorageCard.jsx   # "X files · Y total size" stats card
 │   │   ├── UploadModal.jsx   # Drop zone + queue + progress
-│   │   ├── RenameModal.jsx
-│   │   ├── ShareModal.jsx    # Invite by email + copyable link
+│   │   ├── RenameModal.jsx   # Files and folders
+│   │   ├── ShareModal.jsx    # Create / copy / revoke share links
 │   │   ├── FolderPanel.jsx   # New-folder modal + breadcrumbs
 │   │   └── AppMockup.jsx     # Phone mockup used as landing artwork
 │   ├── [primitives]      # Reusable building blocks
@@ -104,13 +103,11 @@ frontend/src/
 │   └── ProtectedRoute.jsx    # Redirects to /login when signed out
 │
 ├── context/
-│   ├── AuthContext.jsx       # Mock auth: user in localStorage, login/signup/logout
-│   └── LibraryContext.jsx    # Files, folders, trash, uploads, toasts, actions
+│   ├── AuthContext.jsx       # Register/login/logout, JWT + profile in localStorage
+│   └── LibraryContext.jsx    # Files, folders, uploads, toasts, share links
 │
 └── services/
-    ├── api.js            # axios instance (VITE_API_URL) — ready, unused
-    ├── mockData.js       # The demo dataset
-    └── mockApi.js        # Async "API" with simulated latency + mutations
+    └── api.js            # axios instance + one function per backend endpoint
 ```
 
 ### Routes
@@ -127,7 +124,6 @@ frontend/src/
 | `/app/files/folder/:id`     | Files         | yes           |
 | `/app/starred`              | Starred       | yes           |
 | `/app/shared`               | Shared        | yes           |
-| `/app/trash`                | Trash         | yes           |
 | `/app/profile`              | Profile       | yes           |
 | `/app/preview/:fileId`      | FilePreview   | yes           |
 | `/share/:token`             | SharedFile    | no (public)   |
@@ -140,105 +136,36 @@ frontend/src/
 The app has two providers and one rule.
 
 ```
-AuthProvider                → "who is signed in?" (localStorage)
+AuthProvider                → who is signed in? (JWT + profile in localStorage)
   └── ProtectedRoute        → gates /app/*, redirects to /login
-        └── LibraryProvider → "what is in the library?" (mock API)
+        └── LibraryProvider → what is in the library? (real API)
               └── AppLayout → sidebar/bottom-nav, upload + new-folder
                              modals, toast stack, <Outlet/>
 ```
 
-**The rule: all library state flows through `useLibrary()`.** Pages read `files`, `folders`, `trash`, `storage`, `uploads`, and toasts from the context, and change them only through its actions (`toggleStar`, `trashFiles`, `startUpload`, `createFolder`, …). No page fetches on its own or mutates state directly. This is what makes the mock→real swap a one-file change.
+**The rule: all library state flows through `useLibrary()`.** Pages read `files`, `folders`, `uploads`, `sharedLinks` and toasts from the context, and change them only through its actions (`toggleStar`, `trashFiles`, `startUpload`, `createFolder`, …). The context is the only module that talks to `services/api.js` for library data (auth has its own context).
 
-Context-managed UI state also lives in `LibraryContext` (`uploadOpen`, `newFolderOpen`) because modals are owned by `AppLayout` but triggered from any page — `<Outlet/>` cannot pass props down.
+**Loading and errors.** `LibraryProvider` fetches all files + folders once on mount. Screens render skeleton rows while `loading` is true and a retry panel when `error` is set. Every failure message comes from the backend's `{ success, message, data }` envelope via `messageFromError()` — screens never show raw error objects.
 
-**Optimistic updates.** `toggleStar` updates the UI immediately, then calls the API; on failure it rolls back and shows an error toast. Other actions are request-then-update.
-
-**Loading and errors.** `LibraryProvider` fetches the whole library once on mount. Screens render skeleton rows while `loading` is true and a retry panel when `error` is set.
+**Downloads** go through axios as blobs so the JWT travels in the Authorization header (a plain browser navigation can't send it). Public share links download straight from the public endpoint with no token.
 
 ---
 
-## 5. Mock data
+## 5. Talking to the backend
 
-`services/mockData.js` holds the demo dataset: a user, storage stats, six folders, seventeen files, shared-with-me items, trash items, and an activity feed. Two things to know about it:
+All network code lives in `src/services/api.js`:
 
-- **Shapes mirror a future REST payload.** A file looks like:
+- one axios instance, base URL from `VITE_API_URL`;
+- request interceptor attaches `Bearer <token>` from localStorage;
+- response interceptor clears the session and redirects to `/login?expired=1` on 401;
+- `messageFromError(err)` / `fieldErrorsFrom(err)` extract the backend's real messages;
+- one exported function per endpoint (`login`, `fetchAllFiles`, `createShareLink`, …).
 
-  ```json
-  {
-    "id": "file-01",
-    "name": "Project Proposal.pdf",
-    "kind": "pdf",
-    "size": 2516582,
-    "folderId": "f1",
-    "updatedAt": "2026-09-21T14:32:00",
-    "starred": true,
-    "shared": false,
-    "thumb": "https://picsum.photos/seed/lv-offsite/640/440"
-  }
-  ```
-
-  `kind` is one of `pdf | doc | sheet | slides | image | video | audio | archive` and drives the icon and preview renderer. Image thumbnails use picsum.photos with a styled fallback if offline.
-
-- **Storage numbers are labeled as demo data in the UI** ("demo data, not your real usage"). Keep that honesty when you replace the data.
+File shapes coming back from the API (`displayName`, `fileType`, `mimeType`, `size`, `createdAt`, `folder`) are mapped onto the UI's `kind`/`updatedAt` expectations inside `LibraryContext`, so components keep the design-system's field names.
 
 ---
 
-## 6. The services layer & swapping in the real API
-
-The swap is designed to touch **one file**: `services/mockApi.js`.
-
-What exists today:
-
-- **`services/api.js`** — an axios instance with `baseURL: import.meta.env.VITE_API_URL`, already created, currently unused.
-- **`services/mockApi.js`** — async functions with the same signatures a real client would have, plus simulated latency (so skeletons are real) and in-memory mutations (so the UI actually changes).
-
-Every `mockApi` function already takes plain objects, not React state. For example, `getLibrary()` returns a snapshot; `uploadFile({ name, size, folderId, onProgress })` reports progress through a callback; `toggleStar(id)` returns the updated record. The UI never knows the difference.
-
-**Before (mock):**
-
-```js
-export async function getLibrary() {
-  await guard(); // simulated latency
-  return {
-    user: { ...db.user },
-    folders: db.folders.map((f) => ({ ...f })),
-    files: db.files.map((f) => ({ ...f })),
-    /* … trash, sharedWithMe, activity, storage … */
-  };
-}
-```
-
-**After (real):**
-
-```js
-import api from "./api.js";
-
-export async function getLibrary() {
-  const { data } = await api.get("/library");
-  return data; // must match the shape above
-}
-```
-
-**Migration checklist**
-
-| Mock function                | Replace with                |
-| ---------------------------- | --------------------------- |
-| `getLibrary()`               | `GET /library` (or several) |
-| `uploadFile({…, onProgress})`| `POST /files` (axios `onUploadProgress`) |
-| `toggleStar(id)`             | `PATCH /files/:id`          |
-| `renameFile(id, name)`       | `PATCH /files/:id`          |
-| `trashFile(id)` / `restoreFile(id)` / `deleteForever(id)` / `emptyTrash()` | trash endpoints |
-| `createFolder(name, parentId)` | `POST /folders`           |
-| `shareFile(id, {email, permission})` | `POST /files/:id/share` |
-| `getSharedLink(token)`       | `GET /share/:token`         |
-
-`LibraryContext.jsx` needs no changes as long as return shapes match. Also note that `AuthContext` (login/signup/logout) is mocked with a `localStorage` user and will need the same treatment.
-
-Until the backend exists, keep mutations working through `mockApi` — the optimistic-update pattern in `LibraryContext` is already the right shape for real requests.
-
----
-
-## 7. Design system
+## 6. Design system
 
 Everything visual lives in `src/styles.css` as CSS custom properties. Plain CSS by design — no framework to fight.
 
@@ -279,12 +206,11 @@ Type scale: page titles use `clamp(23px → 30px)`, hero display `clamp(34px →
 
 ---
 
-## 8. Conventions & gotchas
+## 7. Conventions & gotchas
 
 - **New page?** Create it in `pages/`, add the route in `App.jsx`. If it lives under `/app`, it renders inside `AppLayout` automatically — no chrome to wire up.
 - **New component?** Primitives (no domain knowledge) go in `ui.jsx`; everything else gets its own file in `components/`.
 - **Styling:** add to `styles.css` under the matching section comment. Keep specificity flat — class selectors, no nesting wars.
 - **Dependencies:** the stack is deliberately small. Adding a library needs a reason lucide/Vite/React can't already cover.
-- **Demo honesty:** placeholder data must be labeled as demo (see the storage card). Nothing in the UI may reference the project's development history — no "capstone," school, or assignment wording anywhere, ever.
 - **Exports:** `ui.jsx` and `hooks.js` are barrel-style; import from the module root (`components/ui.jsx`), not deep paths.
-- **Known simplifications:** auth is mock-only; the trash "restore" puts files back at the library root; folder starring is display-only. All are deliberate scope cuts, not bugs.
+- **Honest UI only:** every screen shows real backend data. If a capability isn't implemented server-side, it isn't shown in the UI either.

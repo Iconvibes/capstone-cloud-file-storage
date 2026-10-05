@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Button, Field, Modal } from "./ui.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
 
-// NewFolderModal collects a name and creates the folder in the current parent.
-export function NewFolderModal({ open, onClose, parentId = null }) {
+// NewFolderModal collects a name and creates the folder. Folders are flat
+// in the backend, so every new folder lives at the top level of the library.
+export function NewFolderModal({ open, onClose }) {
   const { createFolder } = useLibrary();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
@@ -18,7 +19,7 @@ export function NewFolderModal({ open, onClose, parentId = null }) {
       return;
     }
     setBusy(true);
-    const created = await createFolder(trimmed, parentId);
+    const created = await createFolder(trimmed);
     setBusy(false);
     if (created) {
       setName("");

@@ -2,3 +2,8 @@ node_modules/
 .env
 dist/
 npm-debug.log*
+
+# Markdown created during local sessions stays untracked (existing tracked
+# README.md files are unaffected — gitignore never applies to tracked files).
+# Un-ignore explicitly when you decide to commit one.
+*.md

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, CircleAlert } from "lucide-react";
 import { Brand, Button, Field, PasswordField } from "../components/ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { fieldErrorsFrom, messageFromError } from "../services/api.js";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -11,7 +12,17 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
+
+  // Mirror of the backend's rules (8+ chars, one letter, one number) so the
+  // user gets the same feedback the server would give — but the server
+  // remains the source of truth.
+  const rules = {
+    length: password.length >= 8,
+    letter: /[a-zA-Z]/.test(password),
+    number: /[0-9]/.test(password),
+  };
 
   const submit = async (event) => {
     event.preventDefault();
@@ -23,17 +34,19 @@ export default function Register() {
       setError("Enter a valid email address.");
       return;
     }
-    if (password.length < 6) {
-      setError("Passwords are at least 6 characters.");
+    if (!rules.length || !rules.letter || !rules.number) {
+      setError("Your password doesn't meet the requirements yet.");
       return;
     }
     setError("");
+    setFieldErrors({});
     setBusy(true);
     try {
       await signup({ name: name.trim(), email, password });
       navigate("/app", { replace: true });
-    } catch {
-      setError("We couldn't create the account. Try again in a moment.");
+    } catch (cause) {
+      setError(messageFromError(cause, "We couldn't create the account. Try again in a moment."));
+      setFieldErrors(fieldErrorsFrom(cause));
       setBusy(false);
     }
   };
@@ -64,7 +77,7 @@ export default function Register() {
                 placeholder="Ada Nakamura"
               />
             </Field>
-            <Field label="Email address">
+            <Field label="Email address" error={fieldErrors.email}>
               <input
                 className="input"
                 type="email"
@@ -80,14 +93,17 @@ export default function Register() {
               value={password}
               onChange={setPassword}
               autoComplete="new-password"
-              hint="At least 6 characters."
+              hint="At least 8 characters, with a letter and a number."
             />
             <ul className="pw-checklist" aria-hidden="true">
-              <li className={password.length >= 6 ? "ok" : ""}>
-                <Check size={13} /> 6+ characters
+              <li className={rules.length ? "ok" : ""}>
+                <Check size={13} /> 8+ characters
               </li>
-              <li className={/[a-z]/.test(password) && /[A-Z0-9]/.test(password) ? "ok" : ""}>
-                <Check size={13} /> Mixed case or a number
+              <li className={rules.letter ? "ok" : ""}>
+                <Check size={13} /> Contains a letter
+              </li>
+              <li className={rules.number ? "ok" : ""}>
+                <Check size={13} /> Contains a number
               </li>
             </ul>
             <Button type="submit" size="lg" loading={busy} className="btn-block">

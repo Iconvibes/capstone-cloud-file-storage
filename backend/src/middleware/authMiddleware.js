@@ -22,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = user;
     next();
  } catch (err) {
-  console.log("JWT verify error:", err.name, "-", err.message);
+  // Never leak why the token failed — the client only needs to re-authenticate.
   return errorResponse(res, "Not authorized, invalid or expired token", 401);
 }
 };

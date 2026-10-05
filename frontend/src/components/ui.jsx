@@ -49,7 +49,7 @@ export function PasswordField({ label = "Password", value, onChange, placeholder
           placeholder={placeholder}
           autoComplete={autoComplete}
           required
-          minLength={6}
+          minLength={8}
         />
         <button type="button" className="peek" onClick={() => setVisible((v) => !v)} aria-label={visible ? "Hide password" : "Show password"}>
           {visible ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -139,6 +139,39 @@ export function FileSkeletonRows({ rows = 6 }) {
             <Skeleton variant="text" style={{ width: "58%" }} />
             <Skeleton variant="text" className="short" style={{ width: "34%" }} />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function FolderSkeletonCards({ count = 5 }) {
+  return (
+    // Reuses .folder-scroller and .clay-folder-card so the placeholder row
+    // reflows exactly like the real one at every breakpoint.
+    <div className="folder-scroller sk-block" role="status" aria-label="Loading folders">
+      {Array.from({ length: count }, (_, index) => (
+        <div className="clay-folder-card" key={index} aria-hidden="true">
+          <Skeleton variant="block" className="sk-folder-art" />
+          <Skeleton variant="text" style={{ width: "74%" }} />
+          <Skeleton variant="text" className="short" style={{ width: "46%" }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function RecentSkeletonCards({ count = 8 }) {
+  return (
+    // Mirrors .recent-cards' grid (1 col on phones, auto-fill on desktop).
+    <div className="recent-cards sk-block" role="status" aria-label="Loading files">
+      {Array.from({ length: count }, (_, index) => (
+        <div className="recent-card" key={index} aria-hidden="true">
+          <Skeleton variant="tile" />
+          <span className="recent-card-meta">
+            <Skeleton variant="text" style={{ width: "70%" }} />
+            <Skeleton variant="text" className="short" style={{ width: "44%" }} />
+          </span>
         </div>
       ))}
     </div>
