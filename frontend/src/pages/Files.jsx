@@ -86,7 +86,11 @@ export default function Files() {
     [folders],
   );
 
+  // The global top-bar search owns the term: `?q=` drives the filter live, and
+  // `?focus=search` (phone shortcut) additionally reveals the inline field.
   useEffect(() => {
+    const incoming = params.get("q");
+    setQuery(incoming ?? "");
     if (params.get("focus") === "search") setSearchOpen(true);
   }, [params]);
 
@@ -175,7 +179,7 @@ export default function Files() {
         title={folder ? folder.name : "My Files"}
         right={
           <div className="topbar-tools">
-            <IconButton label="Search files" onClick={() => setSearchOpen((v) => !v)}>
+            <IconButton label="Search files" className="only-mobile" onClick={() => setSearchOpen((v) => !v)}>
               <Search size={19} />
             </IconButton>
             <IconButton label="Sort" onClick={() => setSortOpen((v) => !v)}>

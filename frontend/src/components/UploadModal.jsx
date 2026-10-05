@@ -9,10 +9,12 @@ export default function UploadModal({ open, onClose, folderId = null }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [pending, setPending] = useState([]);
-  const { startUpload, uploads, clearFinishedUploads, cancelUpload } = useLibrary();
+  const { startUpload, uploads, clearFinishedUploads, cancelUpload, folders } = useLibrary();
 
   const activeUploads = uploads.filter((u) => u.status === "uploading");
   const finished = uploads.filter((u) => u.status !== "uploading");
+  // "Upload here" on a folder pre-targets it — say so, or the target is a guess.
+  const targetFolder = folders?.find((f) => f._id === folderId);
 
   const addFiles = (fileList) => {
     setPending((current) => {
@@ -86,6 +88,12 @@ export default function UploadModal({ open, onClose, folderId = null }) {
         <b>Drop files here</b>
         <small>or tap to browse — documents, photos, archives, anything you need close.</small>
       </div>
+
+      {targetFolder ? (
+        <p className="up-target">
+          Uploading to <b>{targetFolder.name}</b>
+        </p>
+      ) : null}
 
       {pending.length ? (
         <>

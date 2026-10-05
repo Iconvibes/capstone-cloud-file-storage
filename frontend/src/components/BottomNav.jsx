@@ -1,11 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { Files, Home, Share2, Star, UserRound } from "lucide-react";
+import { Files, Home, Share2, UserRound } from "lucide-react";
 
+// Four destinations like the mobile reference; Starred stays reachable
+// from the Home quick actions since the bottom bar is a thumb zone.
 const ITEMS = [
   { to: "/app", label: "Home", Icon: Home, end: true },
   { to: "/app/files", label: "Files", Icon: Files, end: false },
   { to: "/app/shared", label: "Shared", Icon: Share2, end: false },
-  { to: "/app/starred", label: "Starred", Icon: Star, end: false },
   { to: "/app/profile", label: "Profile", Icon: UserRound, end: false },
 ];
 

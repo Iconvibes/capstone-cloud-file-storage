@@ -30,14 +30,16 @@ function AppLayout() {
     newFolderOpen, setNewFolderOpen,
   } = useLibrary();
   const location = useLocation();
-  const hideChrome = location.pathname.startsWith("/app/preview");
+  // The file preview is an immersive full-bleed view: it drops the sidebar,
+  // but the bottom nav stays so navigation is never out of reach.
+  const hideSidebar = location.pathname.startsWith("/app/preview");
 
   return (
     <div className="app-shell">
-      {!hideChrome ? <Sidebar onNewFolder={() => setNewFolderOpen(true)} /> : null}
+      {!hideSidebar ? <Sidebar onNewFolder={() => setNewFolderOpen(true)} /> : null}
       <div className="app-main">
         <Outlet />
-        {!hideChrome ? <BottomNav /> : null}
+        <BottomNav />
       </div>
       <UploadModal
         open={uploadOpen}

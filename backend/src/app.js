@@ -1,4 +1,5 @@
-require("dotenv").config();
+// Validates required env vars and resolves PORT before anything else loads.
+const env = require("./config/env");
 
 const express = require("express");
 const cors = require("cors");
@@ -13,14 +14,19 @@ const errorHandler = require("./middleware/errorHandler");
 const { apiLimiter } = require("./middleware/rateLimiters");
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = env.port;
 
 app.use(helmet());
+// CLIENT_URL is the deployed frontend origin; accept a comma-separated list so
+// staging and prod can live in one variable. The localhost entries are a dev
+// convenience only — they are left out of production so the deployed API never
+// answers browser requests from arbitrary local origins.
 const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "http://localhost:5173",
-  "http://localhost:3000",
-].filter(Boolean);
+  ...env.clientOrigins,
+  ...(process.env.NODE_ENV === "production"
+    ? []
+    : ["http://localhost:5173", "http://localhost:3000"]),
+];
 
 app.use(cors({
   origin: (origin, callback) => {

@@ -193,6 +193,43 @@ export function LibraryProvider({ children }) {
     [pushToast],
   );
 
+  // Moves a file to a folder (or to the library root with `folderId = null`).
+  // Folder counts are recomputed locally so both card badges stay truthful.
+  const moveFile = useCallback(
+    async (id, folderId = null) => {
+      try {
+        const updated = await cloud.moveFile(id, folderId);
+        setLibrary((state) => {
+          if (!state) return state;
+          const next = {
+            ...state,
+            files: state.files.map((file) =>
+              fileId(file) === id
+                ? { ...file, folder: updated?.folder ?? folderId ?? null }
+                : file,
+            ),
+          };
+          const counts = new Map();
+          next.files.forEach((file) => {
+            const key = file.folder?._id ?? file.folder ?? null;
+            if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+          });
+          next.folders = next.folders.map((folder) => ({
+            ...folder,
+            fileCount: counts.get(folder._id) ?? 0,
+          }));
+          return next;
+        });
+        pushToast({ message: folderId ? "File moved" : "File moved to My Files" });
+        return updated;
+      } catch (cause) {
+        pushToast({ tone: "error", message: cloud.messageFromError(cause, "Couldn't move the file. Try again.") });
+        return null;
+      }
+    },
+    [pushToast],
+  );
+
   const createFolder = useCallback(
     async (name) => {
       try {
@@ -377,6 +414,7 @@ export function LibraryProvider({ children }) {
       requireLibrary,
       toggleStar,
       renameFile,
+      moveFile,
       trashFiles,
       createFolder,
       renameFolder,
@@ -398,7 +436,7 @@ export function LibraryProvider({ children }) {
   }, [
     library, loading, error, load, sort, toasts, pushToast, dismissToast, uploads,
     startUpload, clearFinishedUploads, cancelUpload, requireLibrary, toggleStar,
-    renameFile, trashFiles, createFolder, renameFolder, removeFolder, shareFile,
+    renameFile, moveFile, trashFiles, createFolder, renameFolder, removeFolder, shareFile,
     revokeShare, sharedLinks, loadSharedLinks, uploadOpen, uploadFolderId, newFolderOpen,
   ]);
 

@@ -42,9 +42,15 @@ export function AuthProvider({ children }) {
       persist(null);
       return;
     }
-    // Token present: confirm it is still valid. A 401 is handled by the api
-    // interceptor (clears + redirects to /login?expired=1).
-    fetchCurrentUser().catch(() => {});
+    // Token present: confirm it is still valid and refresh the cached profile
+    // (covers a cleared/aged user cache while the token itself is fine).
+    // A 401 is handled by the api interceptor (clears + redirects to
+    // /login?expired=1).
+    fetchCurrentUser()
+      .then((profile) => {
+        if (profile) persist({ id: profile.id, name: profile.name, email: profile.email });
+      })
+      .catch(() => {});
   }, [persist]);
 
   const login = useCallback(

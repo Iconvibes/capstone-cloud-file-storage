@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Share2, Star } from "lucide-react";
 import { FileIcon } from "./FileIcon.jsx";
+import { ClayFolder } from "./ClayArt.jsx";
 import { formatBytes, formatDate } from "./hooks.js";
 
 // FileListItem renders one file as a list row; FileCard renders the grid tile.
@@ -69,18 +70,16 @@ export function FileCard({ file, onOpen }) {
   );
 }
 
-export function FolderCard({ folder, onOpen, onToggleStar }) {
+export function FolderCard({ folder, onOpen }) {
   return (
     <div className="folder-card">
       <button type="button" className="folder-card-main" onClick={() => onOpen(folder)}>
-        <span className="folder-glyph" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-            <path d="M3 6.2C3 5 4 4 5.2 4h4.1c.6 0 1.2.25 1.6.7l1.2 1.3h6.7C20 6 21 7 21 8.2v9.6c0 1.2-1 2.2-2.2 2.2H5.2C4 20 3 19 3 17.8Z" />
-          </svg>
-        </span>
+        <ClayFolder seed={folder.name} size={38} className="folder-glyph" />
         <span className="folder-card-name">
           <b>{folder.name}</b>
-          <small>{folder.fileCount ?? 0} items</small>
+          <small>
+            {folder.fileCount ?? 0} {folder.fileCount === 1 ? "item" : "items"}
+          </small>
         </span>
         <ChevronRight size={16} aria-hidden="true" />
       </button>
@@ -92,13 +91,11 @@ export function FolderCard({ folder, onOpen, onToggleStar }) {
 export function FolderTile({ folder, onOpen }) {
   return (
     <button type="button" className="folder-tile" onClick={() => onOpen(folder)}>
-      <span className="folder-tile-ic" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M3 6.2C3 5 4 4 5.2 4h4.1c.6 0 1.2.25 1.6.7l1.2 1.3h6.7C20 6 21 7 21 8.2v9.6c0 1.2-1 2.2-2.2 2.2H5.2C4 20 3 19 3 17.8Z" />
-        </svg>
-      </span>
+      <ClayFolder seed={folder.name} size={52} className="folder-tile-ic" />
       <span className="folder-tile-name">{folder.name}</span>
-      <span className="folder-tile-meta">{folder.fileCount ?? 0} items</span>
+      <span className="folder-tile-meta">
+        {folder.fileCount ?? 0} {folder.fileCount === 1 ? "item" : "items"}
+      </span>
     </button>
   );
 }

@@ -34,13 +34,15 @@ const login = async (req, res, next) => {
     // password has `select: false` on the model, so explicitly ask for it here
     const user = await User.findOne({ email }).select("+password");
 
+    // Deliberately two distinct, honest failures (product requirement): the
+    // email step first, then the password step — never a silent success.
     if (!user) {
-      return errorResponse(res, "Invalid email or password", 401);
+      return errorResponse(res, "No account found with this email", 401);
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return errorResponse(res, "Invalid email or password", 401);
+      return errorResponse(res, "Incorrect password", 401);
     }
 
     const token = generateToken({ id: user._id });

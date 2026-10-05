@@ -8,45 +8,68 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
 
 :root {
-  /* clay surface — one base tone; depth comes from the shadow pairs below */
-  --bg: #e9edf4;
-  --surface: #e9edf4;
-  --surface-2: #e2e7f0;
-  --surface-3: #dce2ec;
+  /* clay surface — one warm base, deliberately a touch dimmed so long
+     reading sessions stay comfortable; depth comes from the shadow pairs */
+  --bg: #e9e4db;
+  --surface: #eee9e1;
+  --surface-2: #e2ddd2;
+  --surface-3: #d8d2c4;
 
   /* text — softer than pure black so it sits in the clay */
-  --ink: #2c3346;
-  --ink-2: #5b6480;
-  --ink-3: #97a0b6;
+  --ink: #252b3c;
+  --ink-2: #4f5872;
+  --ink-3: #858ea4;
 
   /* hairlines become light-catching edges instead of grey rules */
-  --line: rgba(255, 255, 255, 0.62);
-  --line-strong: rgba(163, 177, 198, 0.5);
+  --line: rgba(255, 255, 255, 0.7);
+  --line-strong: rgba(160, 149, 129, 0.52);
 
   --brand: #3b5bfd;
   --brand-deep: #2f49d1;
-  --brand-soft: #e2e7fb;
+  --brand-soft: #dfe4fa;
   --success: #12b76a;
   --warning: #f79009;
   --danger: #f04438;
-  --danger-soft: #fbe3e1;
-  --dark: #232a3d;
+  --danger-soft: #f7dedb;
+  --dark: #1d2333;
 
-  /* clay shading */
+  /* clay shading — warm shade to match the base */
   --clay-light: rgba(255, 255, 255, 0.92);
-  --clay-dark: rgba(160, 174, 196, 0.45);
+  --clay-dark: rgba(160, 149, 129, 0.46);
+
+  /* translucent chrome (top bar, bottom nav, preview header). Kept as a token
+     so dark mode can swap it for a dark, equally translucent surface. */
+  --chrome-bg: rgba(238, 233, 225, 0.94);
+  --chrome-border: 0;
+
+  /* tinted surfaces that would otherwise stay light in dark mode */
+  --hero-bg: linear-gradient(135deg, #f7f3ec 0%, #eeecfb 58%, #e6ecfe 100%);
+  --secure-bg: linear-gradient(160deg, #eef2fd 0%, #e5ecfb 100%);
+  --secure-hl: inset 0 1.5px 0 rgba(255, 255, 255, 0.9);
+  --skeleton-base: #ded7c8;
+  --skeleton-sheen: #f2eee6;
+  /* top light-catching edge on clay cards (buttons keep their own white
+     highlight because they sit on saturated fills) */
+  --clay-hi: inset 0 1.5px 0 rgba(255, 255, 255, 0.88);
 
   /* elevation — light from the top-left, shade to the bottom-right */
   --shadow-xs: -2px -2px 5px var(--clay-light), 2px 2px 5px var(--clay-dark);
-  --shadow-sm: -4px -4px 10px rgba(255, 255, 255, 0.94), 4px 4px 10px rgba(160, 174, 196, 0.44);
-  --shadow-md: -9px -9px 20px rgba(255, 255, 255, 0.95), 9px 9px 20px rgba(160, 174, 196, 0.46);
-  --shadow-lg: -16px -16px 36px rgba(255, 255, 255, 0.96), 16px 16px 36px rgba(160, 174, 196, 0.5);
-  --shadow-xl: -26px -26px 56px rgba(255, 255, 255, 0.98), 26px 26px 56px rgba(160, 174, 196, 0.52);
+  --shadow-sm: -4px -4px 10px rgba(255, 255, 255, 0.96), 4px 4px 10px rgba(176, 165, 147, 0.42);
+  --shadow-md: -9px -9px 20px rgba(255, 255, 255, 0.97), 9px 9px 20px rgba(176, 165, 147, 0.44);
+  --shadow-lg: -16px -16px 36px rgba(255, 255, 255, 0.98), 16px 16px 36px rgba(176, 165, 147, 0.48);
+  --shadow-xl: -26px -26px 56px rgba(255, 255, 255, 0.99), 26px 26px 56px rgba(176, 165, 147, 0.5);
 
   /* pressed / recessed states */
-  --shadow-inset-xs: inset -2px -2px 4px rgba(255, 255, 255, 0.8), inset 2px 2px 5px rgba(160, 174, 196, 0.38);
-  --shadow-inset: inset -4px -4px 9px rgba(255, 255, 255, 0.82), inset 4px 4px 9px rgba(160, 174, 196, 0.42);
+  --shadow-inset-xs: inset -2px -2px 4px rgba(255, 255, 255, 0.85), inset 2px 2px 5px rgba(176, 165, 147, 0.36);
+  --shadow-inset: inset -4px -4px 9px rgba(255, 255, 255, 0.88), inset 4px 4px 9px rgba(176, 165, 147, 0.4);
   --shadow-brand: 0 10px 22px -10px rgba(59, 91, 253, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.6);
+
+  /* Overlay surfaces (modals, sheets). The clay glow is right on a light page
+     but reads as glare once the surface sits on a dimmed backdrop, so these
+     drop the white rim entirely and separate by value plus a hairline edge. */
+  --shadow-overlay: 0 18px 44px -14px rgba(58, 48, 34, 0.28), 0 2px 8px -3px rgba(58, 48, 34, 0.14);
+  --edge-quiet: rgba(122, 109, 88, 0.18);
+  --inset-quiet: inset 2px 3px 7px rgba(58, 48, 34, 0.09), inset -1px -1px 3px rgba(255, 255, 255, 0.5);
 
   /* shape & rhythm — clay reads better with generous radii */
   --r-sm: 13px;
@@ -63,8 +86,81 @@
   --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 }
 
+/* ============================================================
+   Dark theme — the same clay language on a deep, slightly warm
+   charcoal. The light half of every shadow pair drops from
+   white to a faint lift so surfaces still read as raised, and
+   the shade half goes to true black so depth stays crisp.
+   ============================================================ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #14161c;
+  --surface: #1e212a;
+  --surface-2: #262a35;
+  --surface-3: #2f3441;
+
+  --ink: #e9ebf2;
+  --ink-2: #a9afc0;
+  --ink-3: #7c8397;
+
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(0, 0, 0, 0.55);
+
+  --brand-soft: #29325a;
+  --danger-soft: #3d2226;
+  --dark: #0e1015;
+
+  --clay-light: rgba(255, 255, 255, 0.06);
+  --clay-dark: rgba(0, 0, 0, 0.58);
+
+  --chrome-bg: rgba(30, 33, 42, 0.92);
+  --chrome-border: 1px solid rgba(255, 255, 255, 0.07);
+
+  --hero-bg: linear-gradient(135deg, #262a37 0%, #232a3e 58%, #212840 100%);
+  --secure-bg: linear-gradient(160deg, #252a3a 0%, #1e2331 100%);
+  --secure-hl: inset 0 1.5px 0 rgba(255, 255, 255, 0.06);
+  --skeleton-base: #2f3441;
+  --skeleton-sheen: #3b4152;
+  --clay-hi: inset 0 1.5px 0 rgba(255, 255, 255, 0.06);
+
+  --shadow-sm: -4px -4px 10px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.45);
+  --shadow-md: -9px -9px 20px rgba(255, 255, 255, 0.045), 9px 9px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: -16px -16px 36px rgba(255, 255, 255, 0.055), 16px 16px 36px rgba(0, 0, 0, 0.55);
+  --shadow-xl: -26px -26px 56px rgba(255, 255, 255, 0.065), 26px 26px 56px rgba(0, 0, 0, 0.6);
+  --shadow-inset-xs: inset -2px -2px 4px rgba(255, 255, 255, 0.04), inset 2px 2px 5px rgba(0, 0, 0, 0.42);
+  --shadow-inset: inset -4px -4px 9px rgba(255, 255, 255, 0.05), inset 4px 4px 9px rgba(0, 0, 0, 0.48);
+  --shadow-brand: 0 10px 22px -10px rgba(59, 91, 253, 0.6), -3px -3px 8px rgba(255, 255, 255, 0.05);
+
+  --shadow-overlay: 0 18px 44px -14px rgba(0, 0, 0, 0.75), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+  --edge-quiet: rgba(255, 255, 255, 0.1);
+  --inset-quiet: inset 2px 3px 7px rgba(0, 0, 0, 0.42), inset -1px -1px 3px rgba(255, 255, 255, 0.055);
+}
+
+/* Keep native scrollbars and form controls in step with the chosen theme. */
+html {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
+}
+
+/* Implicit grid tracks default to `auto`, which sizes to max-content. In a
+   single-column grid that track refuses to shrink, so any long unbroken string
+   (a tagline, an account name, an unbreakable filename) pushes the track wider
+   than its container and the content spills. Declaring the implicit track as
+   minmax(0, 1fr) keeps it shrinkable and still stretched to fill, which is whatevery one of these one-column stacks wants. Grids that declare their own
+     grid-template-columns are untouched — this only sizes implicit tracks, and
+     the declaration is simply ignored on elements that aren't grids. Any rule
+     with a class/element selector outranks this one, so individual grids can
+     still pin their own value. */
+* {
+  grid-auto-columns: minmax(0, 1fr);
 }
 
 html {
@@ -241,13 +337,14 @@ h3,
 
 .btn-dark,
 .btn-primary {
-  background: linear-gradient(145deg, #2e374d, #1f2536);
+  /* primary actions wear the brand blue — the reference's Upload CTA */
+  background: linear-gradient(145deg, #4a67ff, #2f49d1);
   color: #fff;
-  box-shadow: 6px 6px 14px rgba(150, 163, 185, 0.45), -5px -5px 12px rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 22px -10px rgba(59, 91, 253, 0.6), -5px -5px 12px rgba(255, 255, 255, 0.8);
 }
 .btn-dark:hover,
 .btn-primary:hover {
-  background: linear-gradient(145deg, #374159, #262d40);
+  background: linear-gradient(145deg, #5573ff, #3a56e0);
 }
 
 .btn-light {
@@ -462,6 +559,9 @@ h3,
 .seg {
   display: grid;
   grid-auto-flow: column;
+  /* Pinned so the segments keep sizing to their labels rather than sharing the
+     row equally (the global implicit-track default is 1fr). */
+  grid-auto-columns: auto;
   background: var(--surface-2);
   padding: 5px;
   border-radius: 999px;
@@ -580,7 +680,7 @@ h3,
   border-radius: 11px;
   background: linear-gradient(145deg, #4a67ff, #2f49d1);
   color: #fff;
-  box-shadow: 4px 4px 10px rgba(150, 163, 185, 0.45), -3px -3px 8px rgba(255, 255, 255, 0.8);
+  box-shadow: 4px 4px 10px rgba(176, 165, 147, 0.5), -3px -3px 8px rgba(255, 255, 255, 0.85);
 }
 
 .brand-word em {
@@ -641,9 +741,10 @@ h3,
   gap: 2px;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: 13px;
   flex: none;
   position: relative;
+  overflow: hidden;
 }
 
 .file-ic.sm {
@@ -669,37 +770,47 @@ h3,
   font-size: 7px;
 }
 
+/* File-type tiles: saturated clay chips with a white glyph, like the
+   reference. Gradient + inner highlight give the tactile, rounded feel. */
 .tone-red {
-  background: #fee4e2;
-  color: #b42318;
+  background: linear-gradient(150deg, #ff6b5e, #e3372b);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(227, 55, 43, 0.6), inset 0 1.5px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 6px rgba(120, 10, 5, 0.22);
 }
 .tone-blue {
-  background: #e0eaff;
-  color: #1d4ed8;
+  background: linear-gradient(150deg, #5b8cff, #2f55d4);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(47, 85, 212, 0.6), inset 0 1.5px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 6px rgba(10, 30, 110, 0.25);
 }
 .tone-green {
-  background: #dcfae6;
-  color: #067647;
+  background: linear-gradient(150deg, #3ddc8f, #12955a);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(18, 149, 90, 0.55), inset 0 1.5px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 6px rgba(4, 70, 40, 0.25);
 }
 .tone-orange {
-  background: #ffead5;
-  color: #b93815;
+  background: linear-gradient(150deg, #ffb64d, #ef7d16);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(239, 125, 22, 0.55), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 6px rgba(120, 55, 0, 0.25);
 }
 .tone-violet {
-  background: #ebe9fe;
-  color: #6941c6;
+  background: linear-gradient(150deg, #a78bfa, #7c4fe0);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(124, 79, 224, 0.55), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 6px rgba(60, 20, 140, 0.25);
 }
 .tone-rose {
-  background: #fce7f3;
-  color: #c11574;
+  background: linear-gradient(150deg, #fb71a9, #d6247c);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(214, 36, 124, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 6px rgba(110, 5, 55, 0.25);
 }
 .tone-teal {
-  background: #ccfbf1;
-  color: #0e9384;
+  background: linear-gradient(150deg, #3ed3c4, #0f9e90);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(15, 158, 144, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 6px rgba(0, 70, 65, 0.25);
 }
 .tone-gray {
-  background: #eaecf0;
-  color: #475467;
+  background: linear-gradient(150deg, #93a0b5, #64708a);
+  color: #fff;
+  box-shadow: 0 6px 14px -7px rgba(100, 112, 138, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 6px rgba(30, 40, 60, 0.25);
 }
 
 .file-ic-thumb {
@@ -787,7 +898,17 @@ h3,
     align-items: center;
     padding: 24px;
   }
+  /* Sheets become centered dialogs on desktop instead of disappearing —
+     the file-action sheet must stay reachable at every width. */
   .sheet {
+    width: min(440px, 100%);
+    max-height: 84vh;
+    border-radius: var(--r-lg);
+    padding: 18px 22px 22px;
+    box-shadow: var(--shadow-xl);
+    animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+  .sheet-grip {
     display: none;
   }
   .modal {
@@ -937,7 +1058,7 @@ h3,
 .skeleton {
   display: block;
   border-radius: 8px;
-  background: linear-gradient(100deg, #eef0f3 40%, #f7f8fa 50%, #eef0f3 60%);
+  background: linear-gradient(100deg, var(--skeleton-base) 40%, var(--skeleton-sheen) 50%, var(--skeleton-base) 60%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -1074,6 +1195,9 @@ h3,
 .marketing {
   background: var(--surface);
   min-height: 100vh;
+  /* Landing + About size their sections against this box rather than the
+     viewport, so they stay correct wherever the marketing page is placed. */
+  container: marketing / inline-size;
 }
 
 .site-head {
@@ -1162,7 +1286,7 @@ h3,
   margin-top: 12px;
 }
 
-@media (min-width: 960px) {
+@container marketing (min-width: 960px) {
   .site-links {
     display: flex;
   }
@@ -1190,7 +1314,7 @@ h3,
   padding: 24px clamp(18px, 4vw, 44px) 30px;
 }
 
-@media (min-width: 960px) {
+@container marketing (min-width: 960px) {
   .hero-in {
     grid-template-columns: 1.05fr 1fr;
     gap: 40px;
@@ -1278,9 +1402,11 @@ h3,
   transition: transform 0.5s ease;
 }
 
-@media (hover: hover) and (min-width: 960px) {
-  .hero-tilt:hover .phone {
-    transform: rotateY(-4deg) rotateX(1deg);
+@media (hover: hover) {
+  @container marketing (min-width: 960px) {
+    .hero-tilt:hover .phone {
+      transform: rotateY(-4deg) rotateX(1deg);
+    }
   }
 }
 
@@ -1592,7 +1718,7 @@ h3,
   }
 }
 
-@media (max-width: 620px) {
+@container marketing (max-width: 620px) {
   .hero-chip-1,
   .hero-chip-3 {
     display: none;
@@ -1636,7 +1762,7 @@ h3,
   color: var(--ink-3);
 }
 
-@media (min-width: 900px) {
+@container marketing (min-width: 900px) {
   .trust {
     display: flex;
   }
@@ -1762,7 +1888,7 @@ h3,
   }
 }
 
-@media (min-width: 900px) {
+@container marketing (min-width: 900px) {
   .feat-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1786,7 +1912,7 @@ h3,
   align-items: center;
 }
 
-@media (min-width: 900px) {
+@container marketing (min-width: 900px) {
   .sec-split {
     grid-template-columns: 1.1fr 1fr;
     gap: 60px;
@@ -1861,7 +1987,11 @@ h3,
   counter-reset: step;
 }
 
-@media (min-width: 768px) {
+/* 720px is the real minimum for three columns here (3 x ~212 + gaps). The old
+   768px viewport threshold sat just above the content width a 768px window
+   actually produces once the scrollbar is subtracted, so this section dropped
+   to a single column on exactly the width it was designed for. */
+@container marketing (min-width: 720px) {
   .how-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1914,7 +2044,7 @@ h3,
   gap: 14px;
 }
 
-@media (min-width: 640px) {
+@container marketing (min-width: 640px) {
   .use-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -1947,7 +2077,7 @@ h3,
   justify-items: center;
 }
 
-@media (min-width: 960px) {
+@container marketing (min-width: 960px) {
   .preview-duo {
     grid-template-columns: auto 1fr;
     gap: 64px;
@@ -2130,7 +2260,7 @@ h3,
   gap: 28px 20px;
 }
 
-@media (min-width: 900px) {
+@container marketing (min-width: 900px) {
   .site-foot-in {
     grid-template-columns: 1.2fr 2fr;
   }
@@ -2266,6 +2396,7 @@ h3,
   min-height: 100dvh;
   display: grid;
   background: var(--surface);
+  container: auth / inline-size;
 }
 
 .auth-page-solo {
@@ -2421,9 +2552,14 @@ h3,
 }
 
 @media (min-width: 1024px) {
+  /* .auth-page is the container here, so its own two-column switch has to
+     stay viewport-driven. Everything below it can query the container. */
   .auth-page {
     grid-template-columns: 1.05fr 1fr;
   }
+}
+
+@container auth (min-width: 1024px) {
   .auth-aside {
     display: flex;
   }
@@ -2598,6 +2734,10 @@ h3,
 
 .side-bottom {
   display: grid;
+  /* Without an explicit template the implicit track is `auto`, which sizes to
+     max-content and spills past the sidebar's padded box (a long tagline in
+     .side-secure was enough to push it 27px wider than the column). */
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
 }
 
@@ -2669,6 +2809,13 @@ h3,
 .side-account-meta small {
   color: var(--ink-3);
   font-size: 11.5px;
+  /* An email has no spaces, so it sets its own item's automatic minimum size
+     and pushed the account row 27px past the sidebar. Truncate like the name
+     above it. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .side-account > svg {
@@ -2683,7 +2830,7 @@ h3,
   bottom: 0;
   z-index: 50;
   display: flex;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--chrome-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
@@ -2723,7 +2870,7 @@ h3,
   min-height: 58px;
   padding: 8px var(--pad);
   padding-top: calc(8px + var(--sat));
-  background: rgba(246, 247, 249, 0.9);
+  background: var(--chrome-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
@@ -2732,6 +2879,13 @@ h3,
 .topbar-title {
   font-size: 17px;
   letter-spacing: -0.015em;
+  /* On the folder screen this holds the folder name, which can be 100
+     characters. Without a shrink floor it refused to shrink inside
+     .topbar-side and pushed the bar wider than the viewport. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-side {
@@ -2828,9 +2982,18 @@ h3,
   padding: 20px var(--pad) calc(96px + var(--sab));
 }
 
+/* Desktop workspace chrome. The @media gate keeps the sidebar-vs-bottom-nav
+   switch on the viewport, which is genuinely a page-level decision; the
+   @container inside is what stops the wide layout being applied to a content
+   box that has become too narrow (e.g. if the sidebar grows past 264px).
+   720px sits under the narrowest .app-page the desktop shell ever produces
+   (749px at a 1024 viewport, after the scrollbar and the sidebar), so desktop
+   rendering is unchanged. */
 @media (min-width: 1024px) {
-  .page-pad {
-    padding: 28px 36px 60px;
+  @container app (min-width: 720px) {
+    .page-pad {
+      padding: 28px 36px 60px;
+    }
   }
 }
 
@@ -2853,6 +3016,11 @@ h3,
   display: inline-grid;
 }
 
+/* Visibility utilities. These deliberately stay on the viewport rather than
+   a container query: they are used on the marketing, auth and workspace pages
+   alike, and only the workspace has an `app` container ancestor. Keying them to
+   .app-page would leave .hide-sm / .only-mobile permanently in their mobile
+   state on every page outside the signed-in workspace. */
 .hide-sm {
   display: none;
 }
@@ -3237,6 +3405,10 @@ h3,
 .files-actions {
   display: flex;
   gap: 8px;
+  /* The toolbar wraps, but this nested group defaulted to nowrap, so at
+     narrow widths the two buttons stayed on one line and pushed the toolbar
+     (and the page) wider than the viewport. */
+  flex-wrap: wrap;
 }
 
 .select-enter {
@@ -3447,7 +3619,7 @@ h3,
   white-space: nowrap;
 }
 
-@media (min-width: 768px) {
+@container app (min-width: 720px) {
   .shared-from {
     display: flex;
   }
@@ -3703,6 +3875,17 @@ h3,
   max-width: 260px;
 }
 
+.up-target {
+  margin: 12px 2px 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.up-target b {
+  color: var(--ink);
+  font-weight: 650;
+}
+
 .up-queue,
 .up-live {
   margin-top: 14px;
@@ -3812,6 +3995,11 @@ h3,
 .preview-page {
   display: grid;
   grid-template-rows: auto 1fr;
+  /* Without an explicit column track the implicit one is `auto`, which sizes
+     to max-content and can grow wider than the page — a long unbroken
+     filename then pushes the whole preview sideways. minmax(0, 1fr) pins the
+     track to the container width while still letting it shrink. */
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100dvh;
 }
 
@@ -3824,7 +4012,7 @@ h3,
   gap: 10px;
   padding: 10px var(--pad);
   padding-top: calc(10px + var(--sat));
-  background: rgba(246, 247, 249, 0.92);
+  background: var(--chrome-bg);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
   min-width: 0;
@@ -3844,8 +4032,14 @@ h3,
 }
 
 .preview-title small {
+  /* Block + ellipsis: as an inline element it could not clip at all, so a
+     long "Type · Size · Uploaded" line pushed the header past the viewport. */
+  display: block;
   color: var(--ink-3);
   font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .preview-actions {
@@ -4053,8 +4247,10 @@ h3,
 }
 
 @media (min-width: 1024px) {
-  .preview-info {
-    padding-bottom: 48px;
+  @container app (min-width: 720px) {
+    .preview-info {
+      padding-bottom: 48px;
+    }
   }
 }
 
@@ -4065,6 +4261,9 @@ h3,
 
 .preview-info dl {
   display: grid;
+  /* minmax(0, 1fr): the implicit `auto` track sizes to max-content, so a long
+     value (e.g. a deep folder name) made the rows wider than the card. */
+  grid-template-columns: minmax(0, 1fr);
   margin: 0;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -4086,6 +4285,8 @@ h3,
 .preview-info dt {
   color: var(--ink-3);
   font-size: 13.5px;
+  /* Keep the label from being squeezed by a long value beside it. */
+  flex: none;
 }
 
 .preview-info dd {
@@ -4093,6 +4294,12 @@ h3,
   font-size: 13.5px;
   font-weight: 550;
   text-align: right;
+  /* min-width:0 is what lets a flex child shrink below its content width;
+     without it the value forces the row wider than the card. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .preview-missing {
@@ -4216,6 +4423,7 @@ a.settings-row:hover {
   align-content: start;
   justify-items: center;
   padding: 0 var(--pad) 60px;
+  container: share / inline-size;
 }
 
 .share-head {
@@ -4280,14 +4488,119 @@ a.settings-row:hover {
   margin-top: 10px;
 }
 
-.share-missing-ic {
+/* ---------- invalid / expired share link ----------
+   The dead end behind a share URL, built from the same parts as the custom
+   404: one extruded card, the padlock sitting in a recessed well, a quiet
+   status word above the real headline, and the token echoed back so a
+   mangled link is diagnosable. The token is visitor input, so every length
+   here is bounded and the readout is clipped rather than trusted. */
+.share-card.share-dead {
+  max-width: 460px;
+  gap: 10px;
+  padding: 30px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md), var(--clay-hi);
+}
+
+/* A dead end is a full-page moment, so it sits centred like the 404 does.
+   Scoped with :has() so the valid card and its skeleton keep hugging the
+   top, which is what you want while content is still arriving. */
+.share-page:has(.share-dead) {
+  align-content: center;
+  padding-bottom: calc(28px + var(--sab));
+}
+
+.share-dead-art {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 19px;
-  background: var(--surface-2);
+  width: 84px;
+  height: 84px;
+  margin-bottom: 4px;
+  border-radius: 26px;
+  /* Recessed well, so the padlock reads as pressed into the card. */
+  border: 1px solid var(--edge-quiet);
+  box-shadow: var(--inset-quiet);
+  color: var(--ink-3);
+}
+
+/* --ink-3, never --line-strong: that is a divider token whose dark value is
+   rgba(0,0,0,0.55) and all but vanishes on a dark card. */
+.share-dead-status {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(26px, 7vw, 38px);
+  line-height: 1.05;
+  color: var(--ink-3);
+  letter-spacing: -0.03em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.share-card.share-dead h1 {
+  font-size: clamp(19px, 2.6vw, 24px);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.share-dead-lead {
   color: var(--ink-2);
+  max-width: 34ch;
+  font-size: 14.5px;
+}
+
+.share-dead-token {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--edge-quiet);
+  box-shadow: var(--inset-quiet);
+}
+
+.share-dead-token-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.share-dead-token code {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-dead-note {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  max-width: 38ch;
+  overflow-wrap: anywhere;
+}
+
+.share-dead-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.share-dead-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .share-card-loading {
@@ -4299,42 +4612,163 @@ a.settings-row:hover {
   height: 56px;
 }
 
-/* ---------- 404 ---------- */
+@container share (max-width: 400px) {
+  .share-card.share-dead {
+    padding: 24px 16px;
+  }
 
+  .share-dead-actions {
+    width: 100%;
+  }
+
+  .share-dead-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* ---------- 404 ----------
+   Same clay language as the rest of the app: one extruded card, the cloud
+   glyph sitting in a recessed well, and the requested path shown so a broken
+   link is diagnosable. Every length is bounded so a long or hostile URL
+   cannot push the page sideways. */
 .notfound-page {
   min-height: 100dvh;
   display: grid;
-  place-content: center;
+  container: notfound / inline-size;
+  grid-template-rows: auto 1fr;
+  align-content: center;
+  justify-items: center;
+  gap: 22px;
+  padding: 28px var(--pad) calc(28px + var(--sab));
+}
+
+.notfound-top {
+  justify-self: center;
+}
+
+.notfound-brand {
+  text-decoration: none;
+  display: inline-flex;
+  border-radius: var(--r-md);
+}
+
+.notfound-brand:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.notfound-card {
+  width: 100%;
+  max-width: 460px;
+  min-width: 0;
+  display: grid;
   justify-items: center;
   gap: 10px;
   text-align: center;
-  padding: 40px var(--pad);
+  padding: 30px 24px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md), var(--clay-hi);
+}
+
+.notfound-art {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: 4px;
+  border-radius: 26px;
+  /* Recessed well, so the glyph reads as pressed into the card. */
+  border: 1px solid var(--edge-quiet);
+  box-shadow: var(--inset-quiet);
+  color: var(--brand);
 }
 
 .notfound-code {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(64px, 14vw, 110px);
+  font-size: clamp(52px, 12vw, 76px);
   line-height: 1;
-  color: var(--line-strong);
+  /* --ink-3, not --line-strong: the latter is a divider/scrollbar token whose
+     dark value is rgba(0,0,0,0.55), which vanished against a dark card. */
+  color: var(--ink-3);
   letter-spacing: -0.04em;
 }
 
-.notfound-page h1 {
-  font-size: clamp(20px, 3vw, 26px);
+.notfound-card h1 {
+  font-size: clamp(19px, 2.6vw, 24px);
+  line-height: 1.25;
 }
 
-.notfound-page p {
+.notfound-lead {
   color: var(--ink-2);
-  max-width: 340px;
+  max-width: 34ch;
+  font-size: 14.5px;
+}
+
+.notfound-path {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--edge-quiet);
+  box-shadow: var(--inset-quiet);
+}
+
+.notfound-path-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.notfound-path code {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--ink-2);
+  /* The path is user input: clip it rather than let it widen the card. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .notfound-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
   flex-wrap: wrap;
   justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.notfound-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@container notfound (max-width: 400px) {
+  .notfound-card {
+    padding: 24px 16px;
+  }
+
+  .notfound-actions {
+    width: 100%;
+  }
+
+  .notfound-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
 }
 
 
@@ -4368,7 +4802,7 @@ a.settings-row:hover {
 .sidebar {
   border-right: 0;
   background: var(--bg);
-  box-shadow: 8px 0 20px -12px rgba(160, 174, 196, 0.55);
+  box-shadow: 8px 0 20px -12px rgba(176, 165, 147, 0.55);
 }
 
 .side-link {
@@ -4433,18 +4867,18 @@ a.settings-row:hover {
 .topbar,
 .mobile-menu,
 .site-head {
-  background: rgba(233, 237, 244, 0.86);
+  background: var(--chrome-bg);
 }
 
 .topbar {
   border-bottom: 0;
-  box-shadow: 0 6px 16px -12px rgba(160, 174, 196, 0.6);
+  box-shadow: 0 6px 16px -12px rgba(120, 110, 92, 0.5);
 }
 
 .bottom-nav {
-  background: rgba(233, 237, 244, 0.92);
+  background: var(--chrome-bg);
   border-top: 0;
-  box-shadow: 0 -8px 20px -14px rgba(160, 174, 196, 0.7);
+  box-shadow: 0 -8px 20px -14px rgba(120, 110, 92, 0.55);
   padding: 8px 10px calc(8px + var(--sab));
 }
 
@@ -4480,7 +4914,7 @@ a.settings-row:hover {
 
 .site-head.is-scrolled {
   border-bottom-color: transparent;
-  box-shadow: 0 6px 16px -14px rgba(160, 174, 196, 0.7);
+  box-shadow: 0 6px 16px -14px rgba(176, 165, 147, 0.7);
 }
 
 /* ---------- file list and grid ---------- */
@@ -4611,8 +5045,7 @@ a.settings-row:hover {
 .how-ic,
 .feat-ic,
 .empty-icon,
-.dropzone-ic,
-.share-missing-ic {
+.dropzone-ic {
   box-shadow: var(--shadow-inset-xs);
 }
 
@@ -4647,10 +5080,10 @@ a.settings-row:hover {
 /* ---------- upload ---------- */
 
 .dropzone {
-  border: 0;
+  border: 1px solid var(--edge-quiet);
   border-radius: var(--r-xl);
   background: var(--surface);
-  box-shadow: var(--shadow-inset);
+  box-shadow: var(--inset-quiet);
 }
 
 .dropzone.is-dragging {
@@ -4682,16 +5115,16 @@ a.settings-row:hover {
 /* ---------- modals, sheets and toasts ---------- */
 
 .overlay {
-  background: rgba(63, 74, 102, 0.4);
+  background: rgba(63, 74, 102, 0.46);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
 
 .modal,
 .sheet {
-  border: 0;
+  border: 1px solid var(--edge-quiet);
   background: var(--surface);
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-overlay);
 }
 
 .sheet-grip {
@@ -4747,7 +5180,7 @@ a.settings-row:hover {
 /* ---------- skeletons ---------- */
 
 .skeleton {
-  background: linear-gradient(100deg, #e2e7f0 40%, #f1f4f9 50%, #e2e7f0 60%);
+  background: linear-gradient(100deg, var(--skeleton-base) 40%, var(--skeleton-sheen) 50%, var(--skeleton-base) 60%);
   background-size: 200% 100%;
 }
 
@@ -4864,6 +5297,11 @@ a.settings-row:hover {
 
 .app-page {
   min-width: 0;
+  /* The signed-in workspace, and the container that matters most: from 1024px
+     up the sidebar eats 264px, so .app-page is always ~264px narrower than
+     the viewport. Keying the inner breakpoints off the viewport made every
+     one of them fire that much too late. */
+  container: app / inline-size;
 }
 
 .modal-body {
@@ -4928,4 +5366,1141 @@ a.settings-row:hover {
 .about-cta p,
 .final-cta p {
   color: #b6bfd1;
+}
+
+/* ============================================================
+   DASHBOARD 2.0 — hero, clay folders, recent files, right rail
+   Layout engine for the redesigned Home screen. Mobile-first
+   single column with ordered sections; at >=1024px it becomes
+   workspace + contextual rail.
+   ============================================================ */
+
+.home-pad {
+  max-width: 1240px;
+}
+
+.home-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Mobile priority order: greeting/upload -> storage -> folders ->
+   recent -> quick actions -> shared links. The wrappers dissolve so
+   every section is a direct, orderable child of the grid. */
+.home-main,
+.home-rail {
+  display: contents;
+}
+
+.welcome {
+  order: 1;
+}
+.home-rail > .storage-card {
+  order: 2;
+}
+.sec-folders {
+  order: 3;
+}
+.sec-recent {
+  order: 4;
+}
+.rail-quick {
+  order: 5;
+}
+.rail-links {
+  order: 6;
+}
+
+/* ---------- hero / welcome ---------- */
+
+.welcome {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  overflow: hidden;
+  padding: 22px 20px;
+  border-radius: var(--r-xl);
+  background: var(--hero-bg);
+  box-shadow: var(--shadow-md), var(--clay-hi);
+}
+
+.welcome-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.hero-title {
+  display: grid;
+  gap: 6px;
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hero-hello {
+  display: block;
+  font-family: var(--font-body);
+  font-size: clamp(15px, 2.4vw, 17px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-2);
+}
+
+.hero-headline {
+  display: block;
+  color: var(--ink);
+}
+
+.hero-sub {
+  margin-top: 10px;
+  max-width: 44ch;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.hero-cta .btn {
+  transition: transform 0.12s ease, box-shadow 0.16s ease;
+}
+
+.hero-cta .btn:hover {
+  transform: translateY(-1.5px);
+}
+
+.hero-cta .btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.hero-art-wrap {
+  flex: none;
+  width: min(42%, 330px);
+  display: none;
+}
+
+.hero-art {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 18px 26px rgba(53, 87, 224, 0.22));
+}
+
+.hero-chip-float {
+  animation: chip-float 6s ease-in-out infinite;
+}
+
+.hero-chip-delay {
+  animation-delay: -3s;
+}
+
+@keyframes chip-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ---------- section heads ---------- */
+
+.home-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.home-sec-head h2 {
+  font-size: clamp(17px, 2.4vw, 19px);
+  letter-spacing: -0.02em;
+}
+
+.home-sec-head a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+  font-weight: 650;
+  padding: 7px 10px;
+  border-radius: 999px;
+  transition: color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+}
+
+.home-sec-head a:hover {
+  color: var(--brand-deep);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.home-sec {
+  margin-bottom: 0;
+}
+
+/* ---------- clay folder cards ---------- */
+
+.folder-scroller {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 12px;
+  margin: -4px -2px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.clay-folder-card {
+  position: relative;
+  flex: 0 0 148px;
+  scroll-snap-align: start;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 16px 14px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm), var(--clay-hi);
+  transition: transform 0.16s ease, box-shadow 0.18s ease;
+}
+
+@media (hover: hover) {
+  .clay-folder-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md), var(--clay-hi);
+  }
+}
+
+.clay-folder-card:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.clay-folder-card.is-menu-open {
+  box-shadow: var(--shadow-md), var(--clay-hi);
+}
+
+.clay-folder-main {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  text-align: left;
+}
+
+.clay-folder-main .clay-folder {
+  margin-bottom: 10px;
+  filter: drop-shadow(0 8px 12px rgba(63, 82, 140, 0.28));
+  transition: transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .clay-folder-card:hover .clay-folder {
+    transform: translateY(-2px) rotate(-2deg);
+  }
+}
+
+.clay-folder-main b {
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clay-folder-main small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+.clay-folder-kebab {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: var(--ink-3);
+  transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.clay-folder-kebab:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.folder-menu {
+  width: 208px;
+  z-index: 70;
+}
+
+.menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: transparent;
+}
+
+/* ---------- recent files ---------- */
+
+.recent-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.recent-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 6px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm), var(--clay-hi);
+  transition: transform 0.15s ease, box-shadow 0.17s ease;
+}
+
+@media (hover: hover) {
+  .recent-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--clay-hi);
+  }
+}
+
+.recent-card-main {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 7px 6px;
+  border-radius: var(--r-sm);
+}
+
+.recent-card-meta {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.recent-card-meta b {
+  font-size: 14.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.recent-card-meta small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-card-kebab {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 11px;
+  color: var(--ink-3);
+  transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.recent-card-kebab:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+/* ---------- right rail cards ---------- */
+
+.rail-card {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 18px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md), var(--clay-hi);
+}
+
+.rail-card h3 {
+  font-size: 15.5px;
+  letter-spacing: -0.015em;
+}
+
+.rail-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rail-card-head a {
+  color: var(--brand);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.rail-card-head a:hover {
+  text-decoration: underline;
+}
+
+.quick-primary {
+  height: 46px;
+  font-size: 15px;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.rail-action {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  box-shadow: var(--shadow-inset-xs);
+  transition: transform 0.13s ease, box-shadow 0.15s ease, color 0.14s ease;
+}
+
+.rail-action:hover {
+  color: var(--brand-deep);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.rail-action:active {
+  transform: translateY(0) scale(0.98);
+}
+.rail-action-ic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: var(--shadow-xs);
+}
+
+.link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.link-list li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 8px;
+  border-radius: var(--r-sm);
+  transition: background 0.14s ease;
+}
+
+.link-list li:hover {
+  background: var(--surface-2);
+}
+
+.link-list-meta {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 1px;
+}
+
+.link-list-meta b {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-list-meta small {
+  color: var(--ink-3);
+  font-size: 11.5px;
+}
+
+.link-state {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex: none;
+}
+
+.link-state.is-live {
+  background: #d9f7e6;
+  color: #067647;
+}
+
+.link-state.is-expired {
+  background: var(--danger-soft);
+  color: #b42318;
+}
+
+.rail-empty {
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ---------- storage card 2.0 ---------- */
+
+.storage-card {
+  display: grid;
+  gap: 13px;
+  margin-bottom: 0;
+  padding: 18px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md), var(--clay-hi);
+}
+
+.storage-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.storage-ic {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #5b8cff, #2f55d4);
+  color: #fff;
+  box-shadow: 0 8px 16px -8px rgba(47, 85, 212, 0.65), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 6px rgba(10, 30, 110, 0.28);
+}
+
+.storage-card-head {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.storage-card-head b {
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  letter-spacing: -0.015em;
+}
+
+.storage-card-head small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+/* Keep the number and its unit together — they read as one figure, and
+   splitting "44.0" from "MB" across lines breaks the eye on narrow screens. */
+.storage-size {
+  white-space: nowrap;
+}
+
+.storage-segbar {
+  height: 9px;
+  gap: 3px;
+  padding: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: var(--shadow-inset-xs);
+  background: var(--surface-2);
+}
+
+.storage-segbar i {
+  min-width: 6px;
+  flex-basis: 0;
+  border-radius: 999px;
+}
+
+.storage-legend {
+  margin-top: 0;
+  gap: 5px 12px;
+}
+
+.storage-legend span {
+  font-size: 11.5px;
+}
+
+.storage-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0;
+  font-size: 12.5px;
+}
+
+/* ---------- topbar search ---------- */
+
+.topbar-side:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar-search {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  max-width: 420px;
+  height: 42px;
+  padding: 0 16px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  box-shadow: var(--shadow-inset);
+  transition: box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.topbar-search:focus-within {
+  color: var(--brand);
+  box-shadow: var(--shadow-inset), 0 0 0 2px rgba(59, 91, 253, 0.3);
+}
+
+.topbar-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14.5px;
+}
+
+.topbar-search input::placeholder {
+  color: var(--ink-3);
+}
+
+.topbar-title:not(:empty) {
+  margin-right: 4px;
+}
+
+/* ---------- sidebar upgrades ---------- */
+
+.side-folder-ic {
+  flex: none;
+  width: 22px;
+  height: 20px;
+}
+
+.side-folder-link {
+  gap: 10px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.side-secure {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  text-align: center;
+  padding: 18px 14px 16px;
+  border-radius: var(--r-lg);
+  background: var(--secure-bg);
+  box-shadow: var(--shadow-sm), var(--secure-hl);
+}
+
+.side-secure-cloud {
+  color: var(--brand);
+  filter: drop-shadow(0 6px 10px rgba(59, 91, 253, 0.35));
+  margin-bottom: 5px;
+}
+
+.side-secure b {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.side-secure small {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ---------- move picker (file actions) ---------- */
+
+.fa-hint {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: -2px 2px 4px;
+}
+
+.move-list {
+  max-height: 46vh;
+  overflow: auto;
+  gap: 3px;
+  padding: 2px;
+}
+
+.move-list button.move-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  text-align: left;
+  transition: background 0.13s ease;
+}
+
+.move-list button.move-row:hover:not(:disabled) {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset-xs);
+}
+
+.move-list button.move-row:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.move-name {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.move-name b {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.move-name small {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.move-here {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.move-root {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 28px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-size: 14px;
+}
+
+.fa-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 11px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: var(--shadow-inset-xs);
+  transition: color 0.14s ease;
+}
+
+.fa-back:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+/* ============================================================
+   BREAKPOINTS — tablet (768–1023) and desktop (>=1024)
+   ============================================================ */
+
+@container app (min-width: 720px) {
+  .welcome {
+    padding: 30px 30px;
+  }
+
+  .hero-art-wrap {
+    display: block;
+  }
+
+  /* Tablet: folders become a wrapping grid, recent files a 2-col grid */
+  .folder-scroller {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+    overflow: visible;
+    padding: 4px 0 0;
+    margin: 0;
+  }
+
+  .clay-folder-card {
+    flex: initial;
+  }
+
+  .recent-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rail-card,
+  .storage-card {
+    padding: 20px;
+  }
+}
+
+/* The workspace's desktop arrangement. Gated on the viewport because the
+   sidebar/bottom-nav split is a page-level decision; the container query
+   inside is the guard that stops the wide two-column layout being applied
+   to a .app-page that has become narrower than 720px. */
+@media (min-width: 1024px) {
+  @container app (min-width: 720px) {
+    .home-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 324px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .home-main {
+      display: grid;
+      gap: 26px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .home-rail {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+      position: sticky;
+      top: calc(70px + var(--sat));
+    }
+
+    /* order only matters in the mobile flex flow */
+    .welcome,
+    .home-rail > .storage-card,
+    .sec-folders,
+    .sec-recent,
+    .rail-quick,
+    .rail-links {
+      order: initial;
+    }
+
+    .welcome {
+      padding: 36px 38px;
+    }
+
+    .hero-art-wrap {
+      width: min(40%, 340px);
+    }
+
+    .folder-scroller {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+
+    .recent-cards {
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 14px;
+    }
+
+    /* Desktop recent files: richer cards with the meta stacked below */
+    .recent-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "thumb kebab"
+        "meta  kebab";
+      align-items: start;
+      gap: 4px;
+      padding: 16px 14px 14px;
+    }
+
+    .recent-card-main {
+      display: contents;
+    }
+
+    .recent-card-main .file-ic {
+      grid-area: thumb;
+      width: 52px;
+      height: 52px;
+      border-radius: 15px;
+      margin-bottom: 6px;
+    }
+
+    .recent-card-main .file-ic svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .recent-card-meta {
+      grid-area: meta;
+    }
+
+    .recent-card-meta b {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.35;
+      font-size: 14px;
+    }
+
+    .recent-card-kebab {
+      grid-area: kebab;
+      align-self: start;
+    }
+
+    .quick-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* The search field and the bottom bar are app chrome: they render in
+   .app-main, alongside the routed page, NOT inside .app-page — so no
+   container query can reach them. They stay viewport-driven, which is also
+   the right axis for them: they describe the shell, not the page content. */
+@media (min-width: 768px) {
+  /* Tablet keeps the recessed search field; only the phone icon goes away */
+  .topbar-search {
+    display: flex;
+    max-width: 340px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* The mobile bottom bar never appears beside the desktop sidebar —
+     declared here (after the base .bottom-nav rule) so the cascade wins. */
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* The folder row is swipe-driven on phones; a visible bar would break the
+   card rhythm, so it is hidden while the scroll itself stays intact. */
+.folder-scroller {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.folder-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* Folders on the Files screen use the same clay illustration as the
+   dashboard, so the glyph wells give up their tinted plate. */
+.folder-glyph,
+.folder-tile-ic {
+  background: transparent;
+  box-shadow: none;
+  display: inline-grid;
+  place-items: center;
+  filter: drop-shadow(0 5px 7px rgba(63, 82, 140, 0.22));
+}
+
+.folder-tile-ic {
+  margin-bottom: 10px;
+}
+
+@media (hover: hover) {
+  .folder-tile:hover .clay-folder,
+  .folder-card:hover .clay-folder {
+    transform: translateY(-2px) rotate(-2deg);
+  }
+}
+
+.clay-folder {
+  transition: transform 0.18s ease;
+}
+
+.topbar-search-clear {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  color: var(--ink-3);
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.topbar-search-clear:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+/* From tablet up the top bar already holds the recessed search field, so the
+   page-level copy of it is a phone-only affordance. */
+.files-search {
+  display: none;
+}
+
+@container app (max-width: 719.98px) {
+  .files-search {
+    display: flex;
+  }
+}
+
+/* ---------- persistent mobile chrome ----------
+   Below the desktop breakpoint the workspace becomes a single bounded
+   scrollport: .app-main owns the scrolling and is exactly one viewport tall.
+   That makes the sticky top bar pin unconditionally (no ancestor can take
+   its scroll container away), while the fixed bottom nav stays pinned to the
+   viewport. Together they are visible at every scroll position. */
+@media (max-width: 1023.98px) {
+  .app-shell {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-main {
+    /* Block, not flex column: as a flex item .app-page would shrink to the
+       viewport height and leave the sticky top bar no room to travel. */
+    display: block;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-page {
+    min-height: 100%;
+  }
+
+  /* The bottom nav is fixed, so the last card must clear it. */
+  .page-pad,
+  .preview-page {
+    padding-bottom: calc(96px + var(--sab));
+  }
+}
+
+/* ---------- theme switch ----------
+   A real control, not a placeholder: role="switch" on the button with
+   aria-checked, and a clay toggle that reads on in either theme. */
+.switch {
+  flex: none;
+  margin-left: auto;
+  width: 46px;
+  height: 27px;
+  padding: 3px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  box-shadow: var(--shadow-inset-xs);
+  display: flex;
+  align-items: center;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.switch i {
+  display: block;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.18s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.switch.is-on {
+  background: var(--brand);
+  box-shadow: var(--shadow-brand);
+}
+
+.switch.is-on i {
+  transform: translateX(19px);
+}
+
+button.settings-row:focus-visible,
+.switch:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* ---------- shaped skeletons ----------
+   These reuse the real container classes (.folder-scroller, .clay-folder-card,
+   .recent-card) so a placeholder occupies the same box as the content it
+   stands in for — no layout jump when the real cards arrive. */
+.sk-block {
+  pointer-events: none;
+  user-select: none;
+}
+
+.sk-folder-art {
+  width: 62px;
+  height: 44px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.clay-folder-card .skeleton,
+.recent-card .skeleton {
+  border-radius: 7px;
+}
+
+/* Storage card: the bar mirrors .storage-segbar's box so the composition
+   strip grows into place instead of shifting the note below it. */
+.sk-storage-bar {
+  width: 100%;
+  height: 9px;
+  border-radius: 99px;
+  margin-bottom: 2px;
+}
+
+/* Reserve the legend box while placeholder lines sit in it, so the note
+   below does not jump once the real segments arrive. */
+.storage-card .storage-legend {
+  min-height: 18px;
 }

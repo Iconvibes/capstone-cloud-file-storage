@@ -71,7 +71,15 @@ export default function FilePreview() {
 
   if (detailError) {
     return (
-      <main className="app-page">
+      <main className="app-page preview-page">
+        <header className="preview-top">
+          <IconButton label="Back" onClick={() => navigate("/app/files")}>
+            <ArrowLeft size={20} />
+          </IconButton>
+          <div className="preview-title">
+            <b>File unavailable</b>
+          </div>
+        </header>
         <div className="preview-missing">
           <FileIcon kind="default" size="lg" />
           <h2>File unavailable</h2>
@@ -87,7 +95,15 @@ export default function FilePreview() {
   if (!file) {
     // Still loading — show skeletons unless the library already failed hard.
     return (
-      <main className="app-page">
+      <main className="app-page preview-page">
+        <header className="preview-top">
+          <IconButton label="Back" onClick={() => navigate("/app/files")}>
+            <ArrowLeft size={20} />
+          </IconButton>
+          <div className="preview-title">
+            <b>Loading preview</b>
+          </div>
+        </header>
         <div className="preview-missing">
           <Skeleton variant="tile" />
           <Skeleton variant="title" />
@@ -132,8 +148,12 @@ export default function FilePreview() {
           <ArrowLeft size={20} />
         </IconButton>
         <div className="preview-title">
-          <b>{file.displayName}</b>
-          <small>
+          {/* Both lines ellipsis-truncate on narrow screens; title keeps the
+              full text reachable. */}
+          <b title={file.displayName}>{file.displayName}</b>
+          <small
+            title={`${kindLabel(kind)} · ${formatBytes(file.size)} · Uploaded ${formatDateOnly(file.updatedAt ?? file.createdAt)}${folder ? ` · ${folder.name}` : ""}`}
+          >
             {kindLabel(kind)} · {formatBytes(file.size)} · Uploaded {formatDateOnly(file.updatedAt ?? file.createdAt)}
             {folder ? ` · ${folder.name}` : ""}
           </small>
@@ -181,23 +201,27 @@ export default function FilePreview() {
         <dl>
           <div>
             <dt>Type</dt>
-            <dd>{kindLabel(kind)}</dd>
+            <dd title={kindLabel(kind)}>{kindLabel(kind)}</dd>
           </div>
           <div>
             <dt>Size</dt>
-            <dd>{formatBytes(file.size)}</dd>
+            <dd title={formatBytes(file.size)}>{formatBytes(file.size)}</dd>
           </div>
           <div>
             <dt>Location</dt>
-            <dd>{folder?.name ?? "My Files"}</dd>
+            {/* The value ellipsis-truncates on narrow screens; title keeps the
+                full folder name reachable on hover. */}
+            <dd title={folder?.name ?? "My Files"}>{folder?.name ?? "My Files"}</dd>
           </div>
           <div>
             <dt>Uploaded</dt>
-            <dd>{formatDateOnly(file.updatedAt ?? file.createdAt)}</dd>
+            <dd title={formatDateOnly(file.updatedAt ?? file.createdAt)}>
+              {formatDateOnly(file.updatedAt ?? file.createdAt)}
+            </dd>
           </div>
           <div>
             <dt>Starred</dt>
-            <dd>{file.starred ? "Yes" : "No"}</dd>
+            <dd title={file.starred ? "Yes" : "No"}>{file.starred ? "Yes" : "No"}</dd>
           </div>
         </dl>
       </aside>

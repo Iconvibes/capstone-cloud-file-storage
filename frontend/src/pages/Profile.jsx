@@ -1,14 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, CircleHelp, KeyRound, LogOut, Moon, ShieldCheck } from "lucide-react";
+import { ChevronRight, CircleHelp, KeyRound, LogOut, Moon, ShieldCheck, Sun } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import { Avatar, Button } from "../components/ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
+import { useTheme } from "../theme.js";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { pushToast } = useLibrary();
+  const { theme, setTheme } = useTheme();
+  const dark = theme === "dark";
 
   const signOut = () => {
     logout();
@@ -64,16 +67,24 @@ export default function Profile() {
         <section className="settings-group">
           <h2>Preferences</h2>
           <div className="settings-card">
-            <div className="settings-row">
+            <button
+              type="button"
+              className="settings-row"
+              role="switch"
+              aria-checked={dark}
+              onClick={() => setTheme(dark ? "light" : "dark")}
+            >
               <span className="settings-ic">
-                <Moon size={17} />
+                {dark ? <Moon size={17} /> : <Sun size={17} />}
               </span>
               <span className="settings-meta">
                 <b>Dark mode</b>
-                <small>Coming soon — light is the calm default</small>
+                <small>{dark ? "On — deep charcoal clay" : "Off — soft, dimmed clay"}</small>
               </span>
-              <span className="chip">Soon</span>
-            </div>
+              <span className={`switch ${dark ? "is-on" : ""}`.trim()} aria-hidden="true">
+                <i />
+              </span>
+            </button>
             <Link to="/about" className="settings-row">
               <span className="settings-ic">
                 <CircleHelp size={17} />

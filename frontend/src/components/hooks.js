@@ -92,10 +92,16 @@ export function useReveal() {
 export function useBodyLock(active) {
   useEffect(() => {
     if (!active) return undefined;
-    const previous = document.body.style.overflow;
+    // On mobile the workspace scrolls inside .app-main rather than on the
+    // document, so both have to be pinned for the lock to mean anything.
+    const scroller = document.querySelector(".app-main");
+    const previousBody = document.body.style.overflow;
+    const previousScroller = scroller ? scroller.style.overflow : null;
     document.body.style.overflow = "hidden";
+    if (scroller) scroller.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = previous;
+      document.body.style.overflow = previousBody;
+      if (scroller) scroller.style.overflow = previousScroller ?? "";
     };
   }, [active]);
 }
