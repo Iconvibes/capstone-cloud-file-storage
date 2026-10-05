@@ -64,7 +64,6 @@ Share creation returns:
 All endpoints validate via zod (`middleware/validate.js`). Invalid input returns `400` with a list of `{ param, msg, location }` errors. Emails are trimmed/lowercased; passwords need 8+ characters with at least one letter and one number; ObjectIds must be 24-character hex strings; pagination is capped (`limit` ≤ 50).
 
 ## Testing
-- `node scripts/smoke-share.js` — B5 share-link smoke suite (boots the app on port 5099 against a dedicated `cloudfilestorage_test` database; never touches local dev data).
 
 ## Status
 B1 (auth), B2 (upload), B3 (file retrieval), B4 (folders/management) and B5 (file sharing) complete and tested.

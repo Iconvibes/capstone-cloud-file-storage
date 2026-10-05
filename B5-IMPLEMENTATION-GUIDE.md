@@ -367,13 +367,6 @@ You can verify all endpoints right now using Postman or your browser:
    * Open `http://localhost:5000/api/share/vRKHD8vvab0tgU-vNNkjscJKKMi7kFNh` $\rightarrow$ Returns the file JSON metadata.
 3. **Download Shared File (Browser)**:
    * Open `http://localhost:5000/api/share/vRKHD8vvab0tgU-vNNkjscJKKMi7kFNh/download` $\rightarrow$ Browser immediately downloads the PDF file with its true display name.
-4. **Run Automated Smoke Suite**:
-   * In `backend/`, run:
-     ```bash
-     node scripts/smoke-share.js
-     ```
-   * Result: **39 passed, 0 failed**.
-
 ---
 
 ## 6. Summary for the Frontend Team
