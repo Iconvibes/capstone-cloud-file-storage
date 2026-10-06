@@ -43,13 +43,15 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/api", apiLimiter);
+
 
 
 
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "CloudFileStorageApp API is running", data: null });
 });
+
+app.use("/api", apiLimiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
