@@ -235,13 +235,13 @@ Upload a new file, optionally into a folder.
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| file | File | Yes | Allowed types: jpeg, png, pdf, doc, docx. Max size: 10MB |
+| file | File | Yes | Any file type (images, video, audio, documents, archives, executables, unknown types…). Max size: 100 MB. Contents are checked for known threat signatures before storage |
 | folderId | String | No | Must be a valid folder ID belonging to the logged-in user |
 
 **Responses:**
 
 - `201` — Returns the created file document
-- `400` — No file selected / invalid folder ID format / file type not allowed / file too large
+- `400` — No file selected / invalid folder ID format / file too large (max 100 MB) / file blocked by the safety check (known threat signature)
 - `404` — Folder not found (or belongs to another user)
 - `500` — Unexpected server/upload error
 

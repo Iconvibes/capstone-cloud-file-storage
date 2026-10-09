@@ -3,15 +3,19 @@ import * as cloud from "../services/api.js";
 
 const LibraryContext = createContext(null);
 
-// Mirror of the backend's fileType buckets (uploadController.getFileType).
+// Mirror of the backend's fileType buckets (uploadController.getFileType),
+// extended with icon-only kinds. Anything unmatched falls back to "default".
 const MIME_KINDS = [
   [/^image\//, "image"],
   [/^application\/pdf/, "pdf"],
   [/word|officedocument\.wordprocessingml/, "doc"],
   [/excel|spreadsheetml/, "sheet"],
   [/powerpoint|presentationml/, "slides"],
-  [/^text\/plain/, "doc"],
-  [/^application\/zip$/, "archive"],
+  [/^text\/csv/, "sheet"],
+  [/^text\//, "doc"],
+  [/^video\//, "video"],
+  [/^audio\//, "audio"],
+  [/zip|x-zip-compressed|rar|x-7z-compressed|x-tar|gzip|bzip2/, "archive"],
 ];
 
 export function kindOf(file) {

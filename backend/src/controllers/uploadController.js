@@ -2,8 +2,12 @@ const mongoose = require('mongoose');
 const File = require('../models/File');
 const Folder = require('../models/Folder');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
+const { scanBuffer } = require('../services/malwareScan');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
+// Bucket the file into the three list-filter categories. Every MIME type
+// lands somewhere — videos, audio, archives, executables, unknown types all
+// fall through to 'other' rather than being rejected.
 function getFileType(mimetype) {
   if (mimetype.startsWith('image/')) return 'image';
   if (
@@ -13,7 +17,7 @@ function getFileType(mimetype) {
     mimetype.includes('powerpoint') ||
     mimetype.includes('spreadsheet') ||
     mimetype.includes('presentation') ||
-    mimetype === 'text/plain'
+    mimetype.startsWith('text/')
   ) return 'document';
   return 'other';
 }
@@ -22,6 +26,21 @@ async function uploadFile(req, res) {
   try {
     if (!req.file) {
       return errorResponse(res, 'No file selected', 400);
+    }
+
+    // Safety check before anything leaves this server: byte-level signature
+    // scan (EICAR test file, embedded scripts in textual formats). It never
+    // rejects on file type — only on known threat content.
+    const verdict = scanBuffer(req.file.buffer, req.file.mimetype);
+    if (!verdict.safe) {
+      console.warn(
+        `[upload] blocked "${req.file.originalname}" (${req.file.mimetype}, ${req.file.size}B) — threat: ${verdict.threat}`
+      );
+      return errorResponse(
+        res,
+        'This file was blocked by the safety check because it contains a known threat signature.',
+        400
+      );
     }
 
     const { folderId } = req.body;
@@ -55,11 +74,16 @@ async function uploadFile(req, res) {
 
     return successResponse(res, file, 'File uploaded successfully', 201);
   } catch (err) {
-    if (err.message === 'FILE_TYPE_NOT_ALLOWED') {
-      return errorResponse(res, 'File type not allowed', 400);
-    }
+    // Multer's size guard (100 MB) aborts the stream mid-parse, which lands
+    // here when it surfaces through the route rather than the error handler.
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return errorResponse(res, 'File is too large', 400);
+      return errorResponse(res, 'File is too large — the maximum upload size is 100 MB', 400);
+    }
+    // Cloudinary validates real content (e.g. rejects a corrupt PDF) and
+    // answers those with http_code 400 — the file is bad, not the server,
+    // so surface them as a client error instead of a generic 500.
+    if (err && err.http_code === 400) {
+      return errorResponse(res, `The file could not be stored: ${err.message}`, 400);
     }
     console.error(err);
     return errorResponse(res, 'Something went wrong while uploading the file', 500);
