@@ -9,7 +9,11 @@ export default function UploadModal({ open, onClose, folderId = null }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [pending, setPending] = useState([]);
-  const { startUpload, uploads, clearFinishedUploads, cancelUpload, folders } = useLibrary();
+  const { startUpload, uploads, clearFinishedUploads, cancelUpload, folders, pushToast } = useLibrary();
+
+  // Mirrors the backend's multer cap — files over this are refused locally
+  // instead of uploading for seconds just to get a 400.
+  const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
   const activeUploads = uploads.filter((u) => u.status === "uploading");
   const finished = uploads.filter((u) => u.status !== "uploading");
@@ -17,15 +21,26 @@ export default function UploadModal({ open, onClose, folderId = null }) {
   const targetFolder = folders?.find((f) => f._id === folderId);
 
   const addFiles = (fileList) => {
+    const oversize = [];
     setPending((current) => {
       const next = [...current];
       [...fileList].forEach((file) => {
+        if (file.size > MAX_UPLOAD_BYTES) {
+          oversize.push(file.name);
+          return;
+        }
         if (!next.some((entry) => entry.name === file.name && entry.size === file.size)) {
           next.push(file); // keep the real File objects — they carry the bytes
         }
       });
       return next;
     });
+    if (oversize.length) {
+      pushToast({
+        tone: "error",
+        message: `${oversize.length > 1 ? `${oversize.length} files are` : `“${oversize[0]}” is`} over the 100 MB upload limit.`,
+      });
+    }
   };
 
   const choose = (event) => addFiles(event.target.files);
@@ -86,7 +101,7 @@ export default function UploadModal({ open, onClose, folderId = null }) {
           <CloudUpload size={24} />
         </span>
         <b>Drop files here</b>
-        <small>or tap to browse — documents, photos, archives, anything you need close.</small>
+        <small>or tap to browse — any file type, up to 100 MB each: documents, photos, videos, audio, archives, anything you need close.</small>
       </div>
 
       {targetFolder ? (

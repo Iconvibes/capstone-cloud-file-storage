@@ -141,7 +141,7 @@ the file keeps its current folder.
 
 | Field | Rule |
 |---|---|
-| `file` | required. Type/size limits enforced too (400 for "File type not allowed", "File is too large") |
+| `file` | required. Any file type is accepted; max 100 MB (400 for "File is too large"). Files containing known threat signatures are blocked (400, "…blocked by the safety check…") |
 | `folderId` | **optional**; a valid `ObjectId`. When no folder is chosen, **omit it or send `""`** — both are accepted |
 
 - Success → **201** with the created file document.
@@ -242,8 +242,10 @@ into useful messages automatically.
 
 - Send `folderId` as a form field only when a folder is chosen; otherwise omit it
   (or send `""`, which is the standard way HTML forms encode an empty select).
-- File size/type errors (400) should map to friendly copy: "File type not
-  allowed", "File is too large", "No file selected".
+- File errors (400) should map to friendly copy: "File is too large — the
+  maximum upload size is 100 MB", "No file selected", "This file was blocked
+  by the safety check…". There is **no** file-type restriction — every type
+  is accepted (mirror the 100 MB cap client-side to fail fast).
 
 ### 4.8 Sharing a file (for the share button + the public `/share/:token` page)
 

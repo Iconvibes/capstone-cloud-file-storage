@@ -1,35 +1,19 @@
 const multer = require('multer');
 
+// A cloud storage accepts every file type — there is deliberately NO MIME
+// whitelist here (an older one blocked videos, audio, CSVs, SVGs, EXEs, …).
+// The two guards that remain are:
+//   • the size limit below, enforced by multer while it buffers the body, and
+//   • the signature scan in uploadController (blocks known-malware signatures
+//     before anything is handed to cloud storage).
+// Files are kept in memory so they can be streamed straight to Cloudinary;
+// the frontend uploads its queue one file at a time to keep that buffer small.
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // 100 MB
+
 const upload = multer({
-  storage: multer.memoryStorage(), // keeps file in memory, so we can stream straight to Cloudinary
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter: (req, file, cb) => {
-    const allowed = [
-      // images
-      'image/jpeg',
-      'image/png',
-      // pdf
-      'application/pdf',
-      // word
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      // excel
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      // powerpoint
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      // text
-      'text/plain',
-      // zip
-      'application/zip',
-      'application/x-zip-compressed',
-    ];
-    if (!allowed.includes(file.mimetype)) {
-      return cb(new Error('FILE_TYPE_NOT_ALLOWED'));
-    }
-    cb(null, true);
-  },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_UPLOAD_BYTES },
 });
 
 module.exports = upload;
+module.exports.MAX_UPLOAD_BYTES = MAX_UPLOAD_BYTES;
